@@ -20,22 +20,22 @@ import json
 import os
 from datetime import datetime
 
-from DremioToolkitUtils import DremioToolkitUtils
+from utils import Utils
 
 
-class DremioToolkitEnvFileWriter:
+class EnvFileWriter:
     _utils = None
 
     def __init__(self):
-        self._utils = DremioToolkitUtils()
+        self._utils = Utils()
         return
 
-    def save_dremio_environment(self, dremio_env, dremio_env_def, output_filename):
+    def save_dremio_environment(self, env_api_wrapper, dremio_env_def, output_filename):
         if os.path.isfile(output_filename):
             os.remove(output_filename)
         f = open(output_filename, "w", encoding="utf-8")
         f.write('{ "data": [')
-        json.dump({'dremio_environment': [{'file_version': '1.0'}, {"endpoint": dremio_env.get_env_endpoint()},
+        json.dump({'dremio_environment': [{'file_version': '1.0'}, {"endpoint": env_api_wrapper.get_env_endpoint()},
                                           {'timestamp_utc': str(datetime.utcnow())}]}, f, indent=4, sort_keys=True)
         f.write(',\n')
         json.dump({'containers': dremio_env_def.containers}, f, indent=4, sort_keys=True)

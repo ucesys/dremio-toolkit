@@ -16,11 +16,12 @@
 # Contact dremio@ucesys.com
 #########################################################################
 
-from DremioToolkitEnvApi import DremioToolkitEnvApi
-from DremioToolkitEnvReader import DremioToolkitEnvReader
-from DremioToolkitLogger import DremioToolkitLogger
-from DremioToolkitEnvFileWriter import DremioToolkitEnvFileWriter
 import argparse
+
+from env_api import EnvApi
+from env_reader import EnvReader
+from logger import Logger
+from env_file_writer import EnvFileWriter
 
 if __name__ == '__main__':
 
@@ -40,15 +41,15 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
 
     # Process command
-    dremio_tk_logger = DremioToolkitLogger(level=args.log_level, verbose=args.verbose)
-    dremio_env = DremioToolkitEnvApi(args.dremio_environment_url, args.user, args.password, dremio_tk_logger)
-    dremio_env_reader = DremioToolkitEnvReader(dremio_env, dremio_tk_logger)
-    dremio_env_def = dremio_env_reader.read_dremio_environment()
-    dremio_env_writer = DremioToolkitEnvFileWriter()
-    dremio_env_writer.save_dremio_environment(dremio_env, dremio_env_def, args.output_filename)
+    logger = Logger(level=args.log_level, verbose=args.verbose)
+    env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger)
+    env_reader = EnvReader(env_api, logger)
+    env_def = env_reader.read_dremio_environment()
+    env_writer = EnvFileWriter()
+    env_writer.save_dremio_environment(env_api, env_def, args.output_filename)
 
     # Return process status to the OS
-    if dremio_tk_logger.get_error_count() == 0:
+    if logger.get_error_count() == 0:
         exit(0)
     else:
         exit(1)

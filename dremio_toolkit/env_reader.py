@@ -16,18 +16,18 @@
 # Contact dremio@ucesys.com
 #########################################################################
 
-from DremioToolkitEnvApi import DremioToolkitEnvApi
-from DremioToolkitEnvDefinition import DremioEnvDefinition
-from DremioToolkitLogger import DremioToolkitLogger
-from DremioToolkitUtils import DremioToolkitUtils
+from env_api import EnvApi
+from env_definition import EnvDefinition
+from logger import Logger
+from utils import Utils
 
 
-class DremioToolkitEnvReader:
+class EnvReader:
 
-	_logger: DremioToolkitLogger = None
-	_utils = DremioToolkitUtils()
-	_dremio_env: DremioToolkitEnvApi = None
-	_dremio_env_def = DremioEnvDefinition()
+	_logger: Logger = None
+	_utils = Utils()
+	_dremio_env: EnvApi = None
+	_dremio_env_def = EnvDefinition()
 
 	# Current top-level hierarchy context: Home, Space, Source
 	_top_level_hierarchy_context: str = None
@@ -36,8 +36,8 @@ class DremioToolkitEnvReader:
 		self._dremio_env = dremio_env
 		self._logger = dremio_tk_logger
 
-	# Read all objects from the source Dremio environment and return as DremioEnvDefinition
-	def read_dremio_environment(self):
+	# Read all objects from the source Dremio environment and return as EnvDefinition
+	def read_dremio_environment(self) -> EnvDefinition:
 		self._read_catalogs()
 		self._read_reflections()
 		self._read_rules()

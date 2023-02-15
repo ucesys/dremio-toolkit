@@ -21,7 +21,7 @@ import logging
 from datetime import datetime
 
 
-class DremioToolkitLogger:
+class Logger:
     # Configuration
     _LEVELS = {'ERROR': 40, 'WARN': 30, 'WARNING': 30, 'INFO': 20, 'DEBUG': 10}
     _max_errors = 0

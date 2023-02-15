@@ -25,7 +25,7 @@ import urllib
 # DremioClient class provides a facade to Dremio API
 #
 ###
-class DremioToolkitEnvApi:
+class EnvApi:
     # Dremio RESTful API V2
     _api_v2 = 'apiv2'
     _login = _api_v2 + '/login'

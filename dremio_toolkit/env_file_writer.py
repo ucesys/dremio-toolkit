@@ -20,8 +20,8 @@ import json
 import os
 from datetime import datetime
 
-from utils import Utils
-from env_api import EnvApi
+from .utils import Utils
+from .env_api import EnvApi
 
 
 class EnvFileWriter:

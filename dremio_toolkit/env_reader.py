@@ -16,10 +16,10 @@
 # Contact dremio@ucesys.com
 #########################################################################
 
-from env_api import EnvApi
-from env_definition import EnvDefinition
-from logger import Logger
-from utils import Utils
+from .env_api import EnvApi
+from .env_definition import EnvDefinition
+from .logger import Logger
+from .utils import Utils
 
 
 class EnvReader:

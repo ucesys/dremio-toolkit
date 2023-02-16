@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 
-from env_definition import EnvDefinition
+from dremio_toolkit.env_definition import EnvDefinition
 
 
 class MockEnvDefinition(EnvDefinition):
@@ -26,14 +26,34 @@ class MockEnvDefinition(EnvDefinition):
     def _containers(self) -> List[Dict[str, Any]]:
         return [
             {
-              "containerType": "HOME",
-              "createdAt": "2023-02-03T21:08:05.131Z",
-              "id": "4352b221-abcd-4ba9-a92d-b0dc1c2f36e4",
-              "path": [
-                  "@user"
-              ],
-              "tag": "S10NS8HStag=",
-              "type": "CONTAINER"
+                "containerType": "HOME",
+                "createdAt": "2023-02-03T21:08:05.131Z",
+                "id": "4352b221-abcd-4ba9-a92d-b0dc1c2f36e4",
+                "path": [
+                    "@user"
+                ],
+                "tag": "S10NS8HStag=",
+                "type": "CONTAINER"
+            },
+            {
+                "containerType": "SPACE",
+                "createdAt": "2023-02-03T21:36:29.932Z",
+                "id": "86b7f8ff-cdaa-455c-9d12-51ec0dbdcf4f",
+                "path": [
+                    "TestSpace"
+                ],
+                "tag": "jhEcARN4ZW0=",
+                "type": "CONTAINER"
+            },
+            {
+                "containerType": "SOURCE",
+                "createdAt": "2023-02-03T21:37:24.996Z",
+                "id": "01b1d888-1165-4fe7-b4cc-712688e94dad",
+                "path": [
+                    "LocalData"
+                ],
+                "tag": "JDLrVceDJ68=",
+                "type": "CONTAINER"
             }
         ]
 
@@ -49,7 +69,8 @@ class MockEnvDefinition(EnvDefinition):
         ]
 
     def _sources(self) -> Dict[str, Any]:
-        return {
+        return [
+            {
                 "accelerationGracePeriodMs": 10800000,
                 "accelerationNeverExpire": False,
                 "accelerationNeverRefresh": False,
@@ -95,6 +116,7 @@ class MockEnvDefinition(EnvDefinition):
                 "tag": "JDLrVceDJ68=",
                 "type": "NAS"
             }
+        ]
 
     def _spaces(self) -> List[Dict[str, Any]]:
         return [
@@ -129,6 +151,17 @@ class MockEnvDefinition(EnvDefinition):
                         ],
                         "tag": "kad/yd+PUUU=",
                         "type": "CONTAINER"
+                    },
+                    {
+                        "createdAt": "2023-02-03T22:22:30.355Z",
+                        "datasetType": "VIRTUAL",
+                        "id": "9a57f624-b607-4834-bc3d-76e00dcb55dd",
+                        "path": [
+                            "TestSpace",
+                            "TaxiNY"
+                        ],
+                        "tag": "g6BX4qw0UVo=",
+                        "type": "DATASET"
                     }
                 ],
                 "createdAt": "2023-02-03T21:36:29.932Z",
@@ -192,6 +225,30 @@ class MockEnvDefinition(EnvDefinition):
                         "type": {
                             "name": "BIGINT"
                         }
+                    },
+                    {
+                        "name": "trip_distance_mi",
+                        "type": {
+                            "name": "DOUBLE"
+                        }
+                    },
+                    {
+                        "name": "fare_amount",
+                        "type": {
+                            "name": "DOUBLE"
+                        }
+                    },
+                    {
+                        "name": "tip_amount",
+                        "type": {
+                            "name": "DOUBLE"
+                        }
+                    },
+                    {
+                        "name": "total_amount",
+                        "type": {
+                            "name": "DOUBLE"
+                        }
                     }
                 ],
                 "id": "9a57f624-b607-4834-bc3d-76e00dcb55dd",
@@ -222,7 +279,7 @@ class MockEnvDefinition(EnvDefinition):
                 "createdAt": "2023-02-04T11:28:56.438Z",
                 "currentSizeBytes": 0,
                 "datasetId": "5bc7701d-e28b-4f47-900e-46b7c63cfe35",
-                "enabled": False,
+                "enabled": True,
                 "entityType": "reflection",
                 "id": "bc39dfbb-ff24-4bde-89f1-0d9efe45d9b9",
                 "name": "Aggregation Reflection",
@@ -274,10 +331,11 @@ class MockEnvDefinition(EnvDefinition):
     def _tags(self) -> List[Dict[str, Any]]:
         return [
             {
-                "entity_id": "5bc7701d-e28b-4f47-900e-46b7c63cfe35",
+                "entity_id": "9a57f624-b607-4834-bc3d-76e00dcb55dd",
                 "path": [
                     "TestSpace",
-                    "TaxiNY"
+                    "MyFolder",
+                    "TaxiTrips"
                 ],
                 "tags": [
                     "Tag1",
@@ -288,13 +346,37 @@ class MockEnvDefinition(EnvDefinition):
         ]
 
     def _wikis(self) -> List[Dict[str, Any]]:
+        wikis_text = "#  Wikis & Tags\n\n![Gnarly Catalog](https://d33wubrfki0l68.cloudfront.net/c1a54376c45a9276c080f3d10ed25ce61c17bcd2/2b946/img/home/open-source-for-everyone.svg)\n\nYou are reading the wiki for your home space! You can create and edit this information for any source, space, or folder.\n\nThis sidebar always shows the wiki for the current source, space or folder you are browsing.\n\nWhen previewing datasets, click on the `Catalog` tab to create a wiki or add tags to that dataset.\n\n**Tip:** You can hide the wiki by clicking on the sidebar icon on upper right hand side."
+
         return [
             {
                 "entity_id": "4352b221-0aac-4ba9-a92d-b0dc1c2f36e4",
-                "path": [
-                    "@mikhail"
-                ],
-                "text": "#  Wikis & Tags\n\n![Gnarly Catalog](https://d33wubrfki0l68.cloudfront.net/c1a54376c45a9276c080f3d10ed25ce61c17bcd2/2b946/img/home/open-source-for-everyone.svg)\n\nYou are reading the wiki for your home space! You can create and edit this information for any source, space, or folder.\n\nThis sidebar always shows the wiki for the current source, space or folder you are browsing.\n\nWhen previewing datasets, click on the `Catalog` tab to create a wiki or add tags to that dataset.\n\n**Tip:** You can hide the wiki by clicking on the sidebar icon on upper right hand side.",
+                "path": ["@user"],
+                "text": wikis_text,
+                "version": 0
+            },
+            {
+                "entity_id": "86b7f8ff-cdaa-455c-9d12-51ec0dbdcf4f",
+                "path": ["TestSpace"],
+                "text": wikis_text,
+                "version": 0
+            },
+            {
+                "entity_id": "9e5a0edd-f280-4ef6-afb9-7d5998e9cbaa",
+                "path": ["TestSpace", "folder1"],
+                "text": wikis_text,
+                "version": 0
+            },
+            {
+                "entity_id": "9a57f624-b607-4834-bc3d-76e00dcb55dd",
+                "path": ["TestSpace", "MyFolder", "TaxiTrips"],
+                "text": wikis_text,
+                "version": 0
+            },
+            {
+                "entity_id": "01b1d888-1165-4fe7-b4cc-712688e94dad",
+                "path": ["LocalData"],
+                "text": wikis_text,
                 "version": 0
             }
         ]
@@ -304,11 +386,11 @@ class MockEnvDefinition(EnvDefinition):
             {
                 "@type": "EnterpriseUser",
                 "active": True,
-                "email": "mikhail@ucesys.com",
+                "email": "user123@mydomain.com",
                 "firstName": "M",
                 "id": "cd6b0335-5113-485e-bf38-e75090857592",
                 "lastName": "S",
-                "name": "mikhail",
+                "name": "user123",
                 "roles": [
                     {
                         "id": "f71cfba5-e144-4090-883e-df878aca225e",
@@ -320,7 +402,6 @@ class MockEnvDefinition(EnvDefinition):
                 "tag": "Ee65lPjZOpU="
             }
         ]
-
 
     def _referenced_roles(self) -> List[Dict[str, Any]]:
         return [

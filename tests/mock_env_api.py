@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any
 
-from env_api import EnvApi
+from dremio_toolkit.env_api import EnvApi
 
 
 class MockEnvApi(EnvApi):

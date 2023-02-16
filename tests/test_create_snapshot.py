@@ -3,15 +3,16 @@ import os
 import json
 from datetime import datetime
 
-from logger import Logger
+from dremio_toolkit.logger import Logger
+from dremio_toolkit.create_snapshot import create_snapshot
+
 from mock_env_api import MockEnvApi
-from create_snapshot import create_snapshot
 
 
 def test_create_snapshot():
     logger = Logger(level="ERROR", verbose=False)
     env_api = MockEnvApi()
-    expected_path = "expected_snapshot.json"
+    expected_path = "tests/expected_snapshot.json"
     test_dt = datetime.fromisoformat("2023-01-01")
 
     with tempfile.NamedTemporaryFile(mode='w') as tmp_file:  # open file

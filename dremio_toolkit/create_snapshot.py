@@ -18,10 +18,11 @@
 
 import argparse
 from datetime import datetime
-from env_api import EnvApi
-from env_reader import EnvReader
-from logger import Logger
-from env_file_writer import EnvFileWriter
+
+from .env_api import EnvApi
+from .env_reader import EnvReader
+from .logger import Logger
+from .env_file_writer import EnvFileWriter
 
 
 def create_snapshot(env_api: EnvApi, logger: Logger, output_file: str, datetime_utc: datetime) -> None:

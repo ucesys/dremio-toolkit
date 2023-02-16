@@ -18,6 +18,7 @@ class MockEnvDefinition(EnvDefinition):
         self.wikis = self._wikis()
         self.referenced_users = self._referenced_users()
         self.referenced_roles = self._referenced_roles()
+        self.endpoint = "http://localhost:9047/"
         self.votes = []
         self.files = []
         self.dremio_get_config = []

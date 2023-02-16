@@ -21,7 +21,7 @@ import os
 from datetime import datetime
 
 from .utils import Utils
-from .env_api import EnvApi
+from .env_definition import EnvDefinition
 
 
 class EnvFileWriter:
@@ -31,12 +31,12 @@ class EnvFileWriter:
         self._utils = Utils()
         return
 
-    def save_dremio_environment(self, env_api: EnvApi, env_def: str, output_file: str, datetime_utc: datetime):
+    def save_dremio_environment(self, env_def: EnvDefinition, output_file: str, datetime_utc: datetime):
         if os.path.isfile(output_file):
             os.remove(output_file)
         f = open(output_file, "w", encoding="utf-8")
         f.write('{ "data": [')
-        json.dump({'dremio_environment': [{'file_version': '1.0'}, {"endpoint": env_api.get_env_endpoint()},
+        json.dump({'dremio_environment': [{'file_version': '1.0'}, {"endpoint": env_def.endpoint},
                                           {'timestamp_utc': str(datetime_utc)}]}, f, indent=4, sort_keys=True)
         f.write(',\n')
         json.dump({'containers': env_def.containers}, f, indent=4, sort_keys=True)

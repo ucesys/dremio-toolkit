@@ -5,7 +5,6 @@ from datetime import datetime
 
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.create_snapshot import create_snapshot
-
 from mock_env_api import MockEnvApi
 
 

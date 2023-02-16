@@ -43,6 +43,7 @@ class EnvReader:
 		self._read_rules()
 		self._read_queues()
 		self._read_votes()
+		self._dremio_env_def.endpoint = self._dremio_env.get_env_endpoint()
 		return self._dremio_env_def
 
 	# Read top level Dremio catalogs from source Dremio environment,

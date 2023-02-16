@@ -35,3 +35,4 @@ class EnvDefinition:
     referenced_users = []
     referenced_groups = []
     referenced_roles = []
+    endpoint = None

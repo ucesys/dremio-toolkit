@@ -1,6 +1,5 @@
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_reader import EnvReader
-
 from mock_env_api import MockEnvApi
 from mock_env_definition import MockEnvDefinition
 

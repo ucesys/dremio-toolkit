@@ -22,12 +22,6 @@ class Utils:
     def __init__(self):
         return
 
-    # Pop all items from container definition
-    def pop_it(self, container, items):
-        for item in items:
-            if item in container:
-                container.pop(item)
-
     # Appends a list if the item does not exist in the list yet
     def append_unique_list(self, list_object, item_object):
         if item_object not in list_object:

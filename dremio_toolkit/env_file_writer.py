@@ -21,6 +21,7 @@ import os
 from datetime import datetime
 
 from utils import Utils
+from env_api import EnvApi
 
 
 class EnvFileWriter:
@@ -30,44 +31,44 @@ class EnvFileWriter:
         self._utils = Utils()
         return
 
-    def save_dremio_environment(self, env_api_wrapper, dremio_env_def, output_filename):
-        if os.path.isfile(output_filename):
-            os.remove(output_filename)
-        f = open(output_filename, "w", encoding="utf-8")
+    def save_dremio_environment(self, env_api: EnvApi, env_def: str, output_file: str, datetime_utc: datetime):
+        if os.path.isfile(output_file):
+            os.remove(output_file)
+        f = open(output_file, "w", encoding="utf-8")
         f.write('{ "data": [')
-        json.dump({'dremio_environment': [{'file_version': '1.0'}, {"endpoint": env_api_wrapper.get_env_endpoint()},
-                                          {'timestamp_utc': str(datetime.utcnow())}]}, f, indent=4, sort_keys=True)
+        json.dump({'dremio_environment': [{'file_version': '1.0'}, {"endpoint": env_api.get_env_endpoint()},
+                                          {'timestamp_utc': str(datetime_utc)}]}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'containers': dremio_env_def.containers}, f, indent=4, sort_keys=True)
+        json.dump({'containers': env_def.containers}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'homes': dremio_env_def.homes}, f, indent=4, sort_keys=True)
+        json.dump({'homes': env_def.homes}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'sources': dremio_env_def.sources}, f, indent=4, sort_keys=True)
+        json.dump({'sources': env_def.sources}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'spaces': dremio_env_def.spaces}, f, indent=4, sort_keys=True)
+        json.dump({'spaces': env_def.spaces}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'folders': dremio_env_def.folders}, f, indent=4, sort_keys=True)
+        json.dump({'folders': env_def.folders}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'vds': dremio_env_def.vds_list}, f, indent=4, sort_keys=True)
+        json.dump({'vds': env_def.vds_list}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'files': dremio_env_def.files}, f, indent=4, sort_keys=True)
+        json.dump({'files': env_def.files}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'reflections': dremio_env_def.reflections}, f, indent=4, sort_keys=True)
+        json.dump({'reflections': env_def.reflections}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'queues': dremio_env_def.queues}, f, indent=4, sort_keys=True)
+        json.dump({'queues': env_def.queues}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'rules': dremio_env_def.rules}, f, indent=4, sort_keys=True)
+        json.dump({'rules': env_def.rules}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'tags': dremio_env_def.tags}, f, indent=4, sort_keys=True)
+        json.dump({'tags': env_def.tags}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'wikis': dremio_env_def.wikis}, f, indent=4, sort_keys=True)
+        json.dump({'wikis': env_def.wikis}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'votes': dremio_env_def.votes}, f, indent=4, sort_keys=True)
+        json.dump({'votes': env_def.votes}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'referenced_users': dremio_env_def.referenced_users}, f, indent=4, sort_keys=True)
+        json.dump({'referenced_users': env_def.referenced_users}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'referenced_groups': dremio_env_def.referenced_groups}, f, indent=4, sort_keys=True)
+        json.dump({'referenced_groups': env_def.referenced_groups}, f, indent=4, sort_keys=True)
         f.write(',\n')
-        json.dump({'referenced_roles': dremio_env_def.referenced_roles}, f, indent=4, sort_keys=True)
+        json.dump({'referenced_roles': env_def.referenced_roles}, f, indent=4, sort_keys=True)
         f.write(' ] }')
         f.close()

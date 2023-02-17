@@ -176,7 +176,8 @@ class EnvReader:
 				self._logger.debug("Error processing reflection, cannot get path for dataset_container: " + reflection['datasetId'])
 				continue
 			reflection["path"] = reflection_dataset['path']
-			reflections_with_path.append(reflection)
+			if reflection not in reflections_with_path:
+				reflections_with_path.append(reflection)
 		return reflections_with_path
 
 	# Read All Tags for a given catalog.

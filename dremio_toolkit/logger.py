@@ -61,7 +61,7 @@ class Logger:
     def debug(self, message: str, catalog: str = None) -> None:
         self._root_logger.debug(self._enrich_message(message, catalog))
 
-    def print_process_status(self, total, complete):
+    def print_process_status(self, total, complete) -> None:
         if complete != 0:
             pct_complete = complete / total * 100
             ttn = datetime.now() - self._start_time
@@ -70,7 +70,7 @@ class Logger:
                   ' with ' + str(self._error_count) + ' errors.' +
                   ' Estimated time left: ' + str(etl) + '.', end='\r')
 
-    def get_error_count(self):
+    def get_error_count(self) -> int:
         return self._error_count
 
     # Enrich message with either catalog ID or entire catalog JSON depending on verbose setting
@@ -92,7 +92,7 @@ class Logger:
         return message + " " + str(catalog['id'])
 
     # Convert List path to a String if required
-    def _get_str_path(self, path):
+    def _get_str_path(self, path) -> str:
         # Only normalize lists, do not modify strings
         if type(path) != list:
             return path

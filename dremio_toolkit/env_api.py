@@ -81,12 +81,12 @@ class EnvApi:
         self._authenticate()
 
     # Return Dremio environment end point
-    def get_env_endpoint(self):
+    def get_env_endpoint(self) -> str:
         return self._endpoint
 
     # Generate an authentication token and save it
     # https://docs.dremio.com/software/rest-api/#authentication
-    def _authenticate(self):
+    def _authenticate(self) -> None:
         headers = {"Content-Type": "application/json"}
         payload = '{"userName": "' + self._username + '","password": "' + self._password + '"}'
         payload = payload.encode(encoding='utf-8')

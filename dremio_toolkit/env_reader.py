@@ -29,7 +29,7 @@ class ContainerType:
 	SOURCE = "SOURCE"
 
 	@classmethod
-	def all(cls):
+	def all(cls) -> list[str]:
 		return [cls.HOME, cls.SPACE, cls.SOURCE]
 
 
@@ -80,7 +80,7 @@ class EnvReader:
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,
 	# and save objects into self._dremio_env_def
-	def _read_catalogs(self):
+	def _read_catalogs(self) -> None:
 		containers = self._dremio_env.list_catalogs()['data']
 		for container_id, container in enumerate(containers):
 			container_type = container['containerType']
@@ -97,7 +97,7 @@ class EnvReader:
 				self._logger.fatal("Unexpected catalog type ", catalog=container)
 			self._logger.print_process_status(len(containers), container_id+1)
 
-	def _read_entity(self, container, container_type):
+	def _read_entity(self, container, container_type) -> None:
 		entity = self._get_referenced_entity(container)
 		if entity is not None:
 			if container_type == ContainerType.HOME and entity not in self._homes:
@@ -114,7 +114,7 @@ class EnvReader:
 				self._read_space_or_folder_children(entity)
 
 	# Read Space Folder container and traverse through its children hierarchy.
-	def _read_space_folder_container(self, folder_container):
+	def _read_space_folder_container(self, folder_container) -> None:
 		self._logger.debug("Processing HOME/SPACE FOLDER: ", catalog=folder_container)
 		if self._top_level_hierarchy_context not in [ContainerType.HOME, ContainerType.SPACE]:
 			self._logger.error("Error, unexpected top level hierarchy while processing HOME/SPACE FOLDER: " + self._top_level_hierarchy_context)
@@ -128,7 +128,7 @@ class EnvReader:
 			self._read_space_or_folder_children(folder_entity)
 
 	# Read Virtual Dataset container.
-	def _read_virtual_dataset_container(self, dataset_container):
+	def _read_virtual_dataset_container(self, dataset_container) -> None:
 		self._logger.debug("Processing DATASET: ", catalog=dataset_container)
 		dataset_entity = self._get_referenced_entity(dataset_container)
 		if dataset_entity is not None:
@@ -146,7 +146,7 @@ class EnvReader:
 			self._read_tags(dataset_entity)
 
 	# Read Home/Space/Folder container and traverse through its children hierarchy.
-	def _read_space_or_folder_children(self, space):
+	def _read_space_or_folder_children(self, space) -> None:
 		self._logger.debug("Processing children for HOME/SPACE/FOLDER: ", catalog=space)
 		if 'entityType' not in space:
 			self._logger.error("Unexpected json for HOME/SPACE/FOLDER: ", catalog=space)
@@ -162,11 +162,11 @@ class EnvReader:
 				self._logger.error("Unsupported catalog type " + child['type'])
 
 	# Read File - can happen for uploaded user files. Ignore, but issue warning.
-	def _read_file_container(self, file_container):
+	def _read_file_container(self, file_container) -> None:
 		self._logger.warn("Ignoring FILE: ", catalog=file_container)
 
 	# Read All Reflections.
-	def _read_reflections(self):
+	def _read_reflections(self) -> list[Dict]:
 		self._logger.debug("Reading reflections ...")
 		reflections = self._dremio_env.list_reflections()['data']
 		reflections_with_path = []
@@ -180,7 +180,7 @@ class EnvReader:
 		return reflections_with_path
 
 	# Read All Tags for a given catalog.
-	def _read_tags(self, entity):
+	def _read_tags(self, entity) -> None:
 		self._logger.debug("Reading tags for catalog ", catalog=entity)
 		tags = self._dremio_env.get_catalog_tags(entity['id'])
 		if tags is not None:
@@ -193,7 +193,7 @@ class EnvReader:
 				self._tags.append(tags)
 
 	# Read Wiki for a given catalog.
-	def _read_wiki(self, entity):
+	def _read_wiki(self, entity) -> None:
 		self._logger.debug("Reading wiki for catalog ", catalog=entity)
 		wiki = self._dremio_env.get_catalog_wiki(entity['id'])
 		if wiki is not None:
@@ -206,25 +206,25 @@ class EnvReader:
 				self._wikis.append(wiki)
 
 	# Read WLM Queues.
-	def _read_queues(self):
+	def _read_queues(self) -> list[Dict]:
 		self._logger.debug("Reading WLM queues ...")
-		list_queues = self._dremio_env.list_queues()
-		return list_queues['data'] if list_queues and 'data' in list_queues else []
+		queues = self._dremio_env.list_queues()
+		return queues['data'] if queues and 'data' in queues else []
 
 	# Read WLM Rules.
-	def _read_rules(self):
+	def _read_rules(self) -> list[Dict]:
 		self._logger.debug("Reading WLM rules ...")
-		list_rules = self._dremio_env.list_rules()
-		return list_rules['rules'] if list_rules and 'rules' in list_rules else []
+		rules = self._dremio_env.list_rules()
+		return rules['rules'] if rules and 'rules' in rules else []
 
 	# Read Votes.
-	def _read_votes(self):
+	def _read_votes(self) -> list[Dict]:
 		self._logger.debug("Reading votes ...")
-		list_votes = self._dremio_env.list_votes()
-		return list_votes['data'] if list_votes and 'data' in list_votes else []
+		votes = self._dremio_env.list_votes()
+		return votes['data'] if votes and 'data' in votes else []
 
 	# Reads Users, Groups, and Roles from entity AccessControlLost
-	def _read_entity_acl(self, entity):
+	def _read_entity_acl(self, entity) -> None:
 		# Read Owner
 		if 'owner' in entity:
 			owner_id = entity['owner']['ownerId']
@@ -263,7 +263,7 @@ class EnvReader:
 						self._referenced_roles.append(role_entity)
 
 	# Helper method, used by many read* methods
-	def _get_referenced_entity(self, ref):
+	def _get_referenced_entity(self, ref) -> Optional[Dict]:
 		self._logger.debug("Processing reference: ", catalog=ref)
 		if 'id' not in ref:
 			self._logger.error("Ref json does not contain catalog 'id', skipping: ", catalog=ref)

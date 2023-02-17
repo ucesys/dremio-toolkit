@@ -25,7 +25,7 @@ from dremio_toolkit.env_definition import EnvDefinition
 
 class EnvFileWriter:
     @staticmethod
-    def save_dremio_environment(env_def: EnvDefinition, output_file: str, datetime_utc: datetime):
+    def save_dremio_environment(env_def: EnvDefinition, output_file: str, datetime_utc: datetime) -> None:
         if os.path.isfile(output_file):
             os.remove(output_file)
         f = open(output_file, "w", encoding="utf-8")

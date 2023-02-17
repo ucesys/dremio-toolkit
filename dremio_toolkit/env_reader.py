@@ -15,27 +15,32 @@
 #
 # Contact dremio@ucesys.com
 #########################################################################
-from typing import Dict
 
-from .env_api import EnvApi
-from .env_definition import EnvDefinition
-from .logger import Logger
-from .utils import Utils
+from typing import Dict, Optional
+
+from dremio_toolkit.env_api import EnvApi
+from dremio_toolkit.env_definition import EnvDefinition
+from dremio_toolkit.logger import Logger
+
+
+class ContainerType:
+	HOME = "HOME"
+	SPACE = "SPACE"
+	SOURCE = "SOURCE"
+
+	@classmethod
+	def all(cls):
+		return [cls.HOME, cls.SPACE, cls.SOURCE]
 
 
 class EnvReader:
-	_logger: Logger = None
-	_utils = Utils()
-	_dremio_env: EnvApi = None
-
-	# Current top-level hierarchy context: Home, Space, Source
-	_top_level_hierarchy_context: str = None
-
-	def __init__(self, dremio_env, dremio_tk_logger):
+	def __init__(self, dremio_env: EnvApi, dremio_tk_logger: Logger):
 		self._dremio_env = dremio_env
 		self._logger = dremio_tk_logger
 
-		# TODO
+		# Current top-level hierarchy context: Home, Space, Source
+		self._top_level_hierarchy_context: Optional[str] = None
+
 		self._containers: list[Dict] = []
 		self._homes: list[Dict] = []
 		self._spaces: list[Dict] = []
@@ -77,69 +82,50 @@ class EnvReader:
 	# and save objects into self._dremio_env_def
 	def _read_catalogs(self):
 		containers = self._dremio_env.list_catalogs()['data']
-		complete = 0
-		for container in containers:
-			self._logger.print_process_status(len(containers), complete)
-			if container['containerType'] == "HOME":
-				# Note, it processes only one Home container that belongs to the authenticated User.
-				self._read_home_container(container)
-			elif container['containerType'] == "SPACE":
-				self._read_space_container(container)
-			elif container['containerType'] == "SOURCE":
-				self._read_source_container(container)
+		for container_id, container in enumerate(containers):
+			container_type = container['containerType']
+			if container_type in ContainerType.all():
+				self._logger.debug(f"Processing {container_type} container: ", catalog=container)
+				self._top_level_hierarchy_context = container_type
+
+				if container not in self._containers:
+					self._containers.append(container)
+
+				self._read_entity(container, container_type)
+
 			else:
 				self._logger.fatal("Unexpected catalog type ", catalog=container)
-			complete += 1
-		self._logger.print_process_status(len(containers), complete)
+			self._logger.print_process_status(len(containers), container_id+1)
 
-	# Read Home container with traversing through its children hierarchy.
-	def _read_home_container(self, home_container):
-		self._logger.debug("Processing HOME container: ", catalog=home_container)
-		self._top_level_hierarchy_context = "HOME"
-		self._utils.append_unique_list(self._containers, home_container)
-		home_entity = self._get_referenced_entity(home_container)
-		if home_entity is not None:
-			self._utils.append_unique_list(self._homes, home_entity)
-			self._read_entity_acl(home_entity)
-			self._read_wiki(home_entity)
-			self._read_space_or_folder_children(home_entity)
+	def _read_entity(self, container, container_type):
+		entity = self._get_referenced_entity(container)
+		if entity is not None:
+			if container_type == ContainerType.HOME and entity not in self._homes:
+				self._homes.append(entity)
+			elif container_type == ContainerType.SPACE and entity not in self._spaces:
+				self._spaces.append(entity)
+			elif container_type == ContainerType.SOURCE and entity not in self._sources:
+				self._sources.append(entity)
 
-	# Read Space container and traverse through its children hierarchy.
-	def _read_space_container(self, space_container):
-		self._logger.debug("Processing SPACE container: ", catalog=space_container)
-		self._top_level_hierarchy_context = "SPACE"
-		self._utils.append_unique_list(self._containers, space_container)
-		space_entity = self._get_referenced_entity(space_container)
-		if space_entity is not None:
-			self._utils.append_unique_list(self._spaces, space_entity)
-			self._read_entity_acl(space_entity)
-			self._read_wiki(space_entity)
-			self._read_space_or_folder_children(space_entity)
+			self._read_entity_acl(entity)
+			self._read_wiki(entity)
 
-	# Read Source container. DO NOT traverse through its children hierarchy.
-	def _read_source_container(self, source_container):
-		self._logger.debug("Processing SOURCE container: ", catalog=source_container)
-		self._top_level_hierarchy_context = "SOURCE"
-		self._utils.append_unique_list(self._containers, source_container)
-		source_entity = self._get_referenced_entity(source_container)
-		if source_entity is not None:
-			self._utils.append_unique_list(self._sources, source_entity)
-			self._read_entity_acl(source_entity)
-			self._read_wiki(source_entity)
+			if container_type in [ContainerType.HOME, ContainerType.SPACE]:
+				self._read_space_or_folder_children(entity)
 
 	# Read Space Folder container and traverse through its children hierarchy.
 	def _read_space_folder_container(self, folder_container):
 		self._logger.debug("Processing HOME/SPACE FOLDER: ", catalog=folder_container)
-		if self._top_level_hierarchy_context not in ["SPACE", "HOME"]:
+		if self._top_level_hierarchy_context not in [ContainerType.HOME, ContainerType.SPACE]:
 			self._logger.error("Error, unexpected top level hierarchy while processing HOME/SPACE FOLDER: " + self._top_level_hierarchy_context)
 			return
 		folder_entity = self._get_referenced_entity(folder_container)
-		if folder_entity is None:
-			return
-		self._utils.append_unique_list(self._folders, folder_entity)
-		self._read_entity_acl(folder_entity)
-		self._read_wiki(folder_entity)
-		self._read_space_or_folder_children(folder_entity)
+		if folder_entity is not None:
+			if folder_entity not in self._folders:
+				self._folders.append(folder_entity)
+			self._read_entity_acl(folder_entity)
+			self._read_wiki(folder_entity)
+			self._read_space_or_folder_children(folder_entity)
 
 	# Read Virtual Dataset container.
 	def _read_virtual_dataset_container(self, dataset_container):
@@ -150,7 +136,8 @@ class EnvReader:
 				self._logger.error(
 					"Unexpected DATASET type: " + dataset_container['datasetType'] + " : ", catalog=dataset_container)
 			elif dataset_container['datasetType'] == "VIRTUAL":
-				self._utils.append_unique_list(self._vds_list, dataset_entity)
+				if dataset_entity not in self._vds_list:
+					self._vds_list.append(dataset_entity)
 			else:
 				self._logger.error(
 					"Unexpected DATASET type " + dataset_container['datasetType'] + " for ", catalog=dataset_container)
@@ -202,7 +189,8 @@ class EnvReader:
 				tags['path'] = [entity['name']]
 			else:
 				tags['path'] = entity['path']
-			self._utils.append_unique_list(self._tags, tags)
+			if tags not in self._tags:
+				self._tags.append(tags)
 
 	# Read Wiki for a given catalog.
 	def _read_wiki(self, entity):
@@ -214,7 +202,8 @@ class EnvReader:
 				wiki['path'] = [entity['name']]
 			else:
 				wiki['path'] = entity['path']
-			self._utils.append_unique_list(self._wikis, wiki)
+			if wiki not in self._wikis:
+				self._wikis.append(wiki)
 
 	# Read WLM Queues.
 	def _read_queues(self):
@@ -242,16 +231,16 @@ class EnvReader:
 			owner_type = entity['owner']['ownerType']
 			if owner_type == 'USER':
 				user_entity = self._dremio_env.get_user(owner_id)
-				if user_entity is not None:
-					self._utils.append_unique_list(self._referenced_users, user_entity)
+				if user_entity is not None and user_entity not in self._referenced_users:
+					self._referenced_users.append(user_entity)
 			elif owner_type == 'GROUP':
 				group_entity = self._dremio_env.get_group(owner_id)
-				if group_entity is not None:
-					self._utils.append_unique_list(self._referenced_groups, group_entity)
+				if group_entity is not None and group_entity not in self._referenced_groups:
+					self._referenced_groups.append(group_entity)
 			elif owner_type == 'ROLE':
 				role_entity = self._dremio_env.get_role(owner_id)
-				if role_entity is not None:
-					self._utils.append_unique_list(self._referenced_roles, role_entity)
+				if role_entity is not None and role_entity not in self._referenced_roles:
+					self._referenced_roles.append(role_entity)
 			else:
 				self._logger.error("Unexpected OwnerType '" + owner_type + "' for entity ", catalog=entity)
 		# Read AccessControlList
@@ -260,18 +249,18 @@ class EnvReader:
 			if 'users' in acl:
 				for user in acl['users']:
 					user_entity = self._dremio_env.get_user(user['id'])
-					if user_entity is not None:
-						self._utils.append_unique_list(self._referenced_users, user_entity)
+					if user_entity is not None and user_entity not in self._referenced_users:
+						self._referenced_users.append(user_entity)
 			if 'groups' in acl:
 				for group in acl['groups']:
 					group_entity = self._dremio_env.get_group(group['id'])
-					if group_entity is not None:
-						self._utils.append_unique_list(self._referenced_groups, group_entity)
+					if group_entity is not None and group_entity not in self._referenced_groups:
+						self._referenced_groups.append(group_entity)
 			if 'roles' in acl:
 				for role in acl['roles']:
 					role_entity = self._dremio_env.get_role(role['id'])
-					if role_entity is not None:
-						self._utils.append_unique_list(self._referenced_roles, role_entity)
+					if role_entity is not None and role_entity not in self._referenced_roles:
+						self._referenced_roles.append(role_entity)
 
 	# Helper method, used by many read* methods
 	def _get_referenced_entity(self, ref):
@@ -280,5 +269,4 @@ class EnvReader:
 			self._logger.error("Ref json does not contain catalog 'id', skipping: ", catalog=ref)
 			return None
 		else:
-			entity = self._dremio_env.get_catalog(ref['id'])
-			return entity
+			return self._dremio_env.get_catalog(ref['id'])

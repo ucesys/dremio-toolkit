@@ -20,18 +20,12 @@ import json
 import os
 from datetime import datetime
 
-from .utils import Utils
-from .env_definition import EnvDefinition
+from dremio_toolkit.env_definition import EnvDefinition
 
 
 class EnvFileWriter:
-    _utils = None
-
-    def __init__(self):
-        self._utils = Utils()
-        return
-
-    def save_dremio_environment(self, env_def: EnvDefinition, output_file: str, datetime_utc: datetime):
+    @staticmethod
+    def save_dremio_environment(env_def: EnvDefinition, output_file: str, datetime_utc: datetime):
         if os.path.isfile(output_file):
             os.remove(output_file)
         f = open(output_file, "w", encoding="utf-8")

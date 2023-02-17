@@ -19,18 +19,17 @@
 import argparse
 from datetime import datetime
 
-from .env_api import EnvApi
-from .env_reader import EnvReader
-from .logger import Logger
-from .env_file_writer import EnvFileWriter
+from dremio_toolkit.env_api import EnvApi
+from dremio_toolkit.env_reader import EnvReader
+from dremio_toolkit.logger import Logger
+from dremio_toolkit.env_file_writer import EnvFileWriter
 
 
 def create_snapshot(env_api: EnvApi, logger: Logger, output_file: str, datetime_utc: datetime) -> None:
     env_reader = EnvReader(env_api, logger)
     env_def = env_reader.read_dremio_environment()
 
-    env_writer = EnvFileWriter()
-    env_writer.save_dremio_environment(env_def, output_file, datetime_utc=datetime_utc)
+    EnvFileWriter.save_dremio_environment(env_def, output_file, datetime_utc=datetime_utc)
 
     assert logger.get_error_count() == 0, "Errors encountered during snapshot creation"
 
@@ -54,6 +53,3 @@ if __name__ == '__main__':
     env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger)
 
     create_snapshot(env_api=env_api, logger=logger, output_file=args.output_file, datetime_utc=datetime.utcnow())
-
-
-

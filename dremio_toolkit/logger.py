@@ -16,7 +16,6 @@
 # Contact dremio@ucesys.com
 #########################################################################
 
-
 import logging
 from datetime import datetime
 

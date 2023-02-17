@@ -1,30 +1,27 @@
+#########################################################################
+# Copyright (C) 2023 UCE Systems Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Contact dremio@ucesys.com
+#########################################################################
+
 from typing import List, Dict, Any
 
 from dremio_toolkit.env_definition import EnvDefinition
 
 
-# class MockEnvDefinition(EnvDefinition):
-#     def _init__():
-#         self.containers = self._containers()
-#         self.homes = self._homes()
-#         self.sources = self._sources()
-#         self.spaces = self._spaces()
-#         self.folders = self._folders()
-#         self.vds_list = self._vds()
-#         self.reflections = self._reflections()
-#         self.queues = self._queues()
-#         self.rules = self._rules()
-#         self.tags = self._tags()
-#         self.wikis = self._wikis()
-#         self.referenced_users = self._referenced_users()
-#         self.referenced_roles = self._referenced_roles()
-#         self.endpoint = "http://localhost:9047/"
-#         self.votes = []
-#         self.files = []
-#         self.dremio_get_config = []
-#         self.referenced_groups = []
-
-def mock_env_defnition() -> EnvDefinition:
+def mock_env_definition() -> EnvDefinition:
     return EnvDefinition(
         containers=containers(),
         homes=homes(),
@@ -202,6 +199,7 @@ def spaces() -> List[Dict[str, Any]]:
         }
     ]
 
+
 def folders() -> List[Dict[str, Any]]:
     return [
         {
@@ -232,6 +230,7 @@ def folders() -> List[Dict[str, Any]]:
             "tag": "kad/yd+PUUU="
         }
     ]
+
 
 def vds() -> List[Dict[str, Any]]:
     return [
@@ -296,6 +295,7 @@ def vds() -> List[Dict[str, Any]]:
         }
     ]
 
+
 def reflections() -> List[Dict[str, Any]]:
     return [
         {
@@ -330,6 +330,7 @@ def reflections() -> List[Dict[str, Any]]:
         }
     ]
 
+
 def queues() -> List[Dict[str, Any]]:
     return [
         {
@@ -342,6 +343,7 @@ def queues() -> List[Dict[str, Any]]:
         }
     ]
 
+
 def rules() -> List[Dict[str, Any]]:
     return [
         {
@@ -353,6 +355,7 @@ def rules() -> List[Dict[str, Any]]:
             "name": "UI Previews"
         }
     ]
+
 
 def tags() -> List[Dict[str, Any]]:
     return [
@@ -370,6 +373,7 @@ def tags() -> List[Dict[str, Any]]:
             "version": "1mnAO+r2rrI="
         }
     ]
+
 
 def wikis() -> List[Dict[str, Any]]:
     wikis_text = "#  Wikis & Tags\n\n![Gnarly Catalog](https://d33wubrfki0l68.cloudfront.net/c1a54376c45a9276c080f3d10ed25ce61c17bcd2/2b946/img/home/open-source-for-everyone.svg)\n\nYou are reading the wiki for your home space! You can create and edit this information for any source, space, or folder.\n\nThis sidebar always shows the wiki for the current source, space or folder you are browsing.\n\nWhen previewing datasets, click on the `Catalog` tab to create a wiki or add tags to that dataset.\n\n**Tip:** You can hide the wiki by clicking on the sidebar icon on upper right hand side."
@@ -407,6 +411,7 @@ def wikis() -> List[Dict[str, Any]]:
         }
     ]
 
+
 def referenced_users() -> List[Dict[str, Any]]:
     return [
         {
@@ -428,6 +433,7 @@ def referenced_users() -> List[Dict[str, Any]]:
             "tag": "Ee65lPjZOpU="
         }
     ]
+
 
 def referenced_roles() -> List[Dict[str, Any]]:
     return [

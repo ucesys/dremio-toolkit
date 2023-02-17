@@ -1,14 +1,14 @@
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_reader import EnvReader
 from mock_env_api import MockEnvApi
-from mock_env_definition import MockEnvDefinition
+from mock_env_definition import mock_env_defnition
 
 
 def test_read_dremio_environment():
     logger = Logger(level="ERROR", verbose=False)
     env_api = MockEnvApi()
     env_reader = EnvReader(env_api, logger)
-    expected_env_def = MockEnvDefinition()
+    expected_env_def = mock_env_defnition()
 
     env_def = env_reader.read_dremio_environment()
 

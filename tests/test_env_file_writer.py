@@ -4,11 +4,11 @@ from datetime import datetime
 import tempfile
 
 from dremio_toolkit.env_file_writer import EnvFileWriter
-from mock_env_definition import MockEnvDefinition
+from mock_env_definition import mock_env_defnition
 
 
 def test_env_file_writer():
-    env_def = MockEnvDefinition()
+    env_def = mock_env_defnition()
     env_writer = EnvFileWriter()
 
     expected_path = "tests/expected_snapshot.json"

@@ -16,23 +16,26 @@
 # Contact dremio@ucesys.com
 #########################################################################
 
+from dataclasses import dataclass
+from typing import Dict, Any
 
+
+@dataclass(frozen=True)
 class EnvDefinition:
-    containers = []
-    homes = []
-    sources = []
-    spaces = []
-    folders = []
-    vds_list = []
-    reflections = []
-    queues = []
-    rules = []
-    tags = []
-    wikis = []
-    votes = []
-    files = []
-    dremio_get_config = []
-    referenced_users = []
-    referenced_groups = []
-    referenced_roles = []
-    endpoint = None
+    containers: list[Dict[str, Any]]
+    homes: list[Dict[str, Any]]
+    sources: list[Dict[str, Any]]
+    spaces: list[Dict[str, Any]]
+    folders: list[Dict[str, Any]]
+    vds_list: list[Dict[str, Any]]
+    reflections: list[Dict[str, Any]]
+    rules: list[Dict[str, Any]]
+    queues: list[Dict[str, Any]]
+    votes: list[Dict[str, Any]]
+    files: list[Dict[str, Any]]
+    tags: list[Dict[str, Any]]
+    wikis: list[Dict[str, Any]]
+    referenced_users: list[Dict[str, Any]]
+    referenced_groups: list[Dict[str, Any]]
+    referenced_roles: list[Dict[str, Any]]
+    endpoint: str

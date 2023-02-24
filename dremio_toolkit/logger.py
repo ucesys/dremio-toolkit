@@ -19,6 +19,7 @@
 import logging
 from datetime import datetime
 
+from dremio_toolkit.utils import Utils
 
 class Logger:
     # Configuration
@@ -61,7 +62,7 @@ class Logger:
     def debug(self, message: str, catalog: str = None) -> None:
         self._root_logger.debug(self._enrich_message(message, catalog))
 
-    def print_process_status(self, total, complete) -> None:
+    def print_process_status(self, total: int, complete: int) -> None:
         if complete != 0:
             pct_complete = complete / total * 100
             ttn = datetime.now() - self._start_time
@@ -69,6 +70,9 @@ class Logger:
             print('Processed: ' + str(round(pct_complete)) + '%. in ' + str(ttn) +
                   ' with ' + str(self._error_count) + ' errors.' +
                   ' Estimated time left: ' + str(etl) + '.', end='\r')
+        if complete == total:
+            # print new line
+            print()
 
     def get_error_count(self) -> int:
         return self._error_count
@@ -81,7 +85,7 @@ class Logger:
             return message + " " + str(catalog)
         if 'path' in catalog:
             if 'entityType' in catalog:
-                return message + " " + str(catalog['entityType']) + ":" + self._get_str_path(catalog['path'])
+                return message + " " + str(catalog['entityType']) + ":" + Utils.get_str_path(catalog['path'])
             else:
                 return message + " " + self._get_str_path(catalog['path'])
         if 'entityType' in catalog:
@@ -90,13 +94,3 @@ class Logger:
             else:
                 return message + " " + str(catalog['entityType']) + ":" + str(catalog['id'])
         return message + " " + str(catalog['id'])
-
-    # Convert List path to a String if required
-    def _get_str_path(self, path) -> str:
-        # Only normalize lists, do not modify strings
-        if type(path) != list:
-            return path
-        str_path = ""
-        for item in path:
-            str_path = str_path + item + "/"
-        return str_path[:-1]

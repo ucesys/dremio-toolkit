@@ -16,12 +16,11 @@
 # Contact dremio@ucesys.com
 #########################################################################
 
-
 import logging
 from datetime import datetime
 
 
-class DremioToolkitLogger:
+class Logger:
     # Configuration
     _LEVELS = {'ERROR': 40, 'WARN': 30, 'WARNING': 30, 'INFO': 20, 'DEBUG': 10}
     _max_errors = 0
@@ -62,7 +61,7 @@ class DremioToolkitLogger:
     def debug(self, message: str, catalog: str = None) -> None:
         self._root_logger.debug(self._enrich_message(message, catalog))
 
-    def print_process_status(self, total, complete):
+    def print_process_status(self, total, complete) -> None:
         if complete != 0:
             pct_complete = complete / total * 100
             ttn = datetime.now() - self._start_time
@@ -71,7 +70,7 @@ class DremioToolkitLogger:
                   ' with ' + str(self._error_count) + ' errors.' +
                   ' Estimated time left: ' + str(etl) + '.', end='\r')
 
-    def get_error_count(self):
+    def get_error_count(self) -> int:
         return self._error_count
 
     # Enrich message with either catalog ID or entire catalog JSON depending on verbose setting
@@ -93,7 +92,7 @@ class DremioToolkitLogger:
         return message + " " + str(catalog['id'])
 
     # Convert List path to a String if required
-    def _get_str_path(self, path):
+    def _get_str_path(self, path) -> str:
         # Only normalize lists, do not modify strings
         if type(path) != list:
             return path

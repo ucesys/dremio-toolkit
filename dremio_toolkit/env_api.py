@@ -25,7 +25,7 @@ import urllib
 # DremioClient class provides a facade to Dremio API
 #
 ###
-class DremioToolkitEnvApi:
+class EnvApi:
     # Dremio RESTful API V2
     _api_v2 = 'apiv2'
     _login = _api_v2 + '/login'
@@ -81,12 +81,12 @@ class DremioToolkitEnvApi:
         self._authenticate()
 
     # Return Dremio environment end point
-    def get_env_endpoint(self):
+    def get_env_endpoint(self) -> str:
         return self._endpoint
 
     # Generate an authentication token and save it
     # https://docs.dremio.com/software/rest-api/#authentication
-    def _authenticate(self):
+    def _authenticate(self) -> None:
         headers = {"Content-Type": "application/json"}
         payload = '{"userName": "' + self._username + '","password": "' + self._password + '"}'
         payload = payload.encode(encoding='utf-8')

@@ -16,22 +16,26 @@
 # Contact dremio@ucesys.com
 #########################################################################
 
+from dataclasses import dataclass
+from typing import Dict, Any
 
-class DremioEnvDefinition:
-    containers = []
-    homes = []
-    sources = []
-    spaces = []
-    folders = []
-    vds_list = []
-    reflections = []
-    queues = []
-    rules = []
-    tags = []
-    wikis = []
-    votes = []
-    files = []
-    dremio_get_config = []
-    referenced_users = []
-    referenced_groups = []
-    referenced_roles = []
+
+@dataclass(frozen=True)
+class EnvDefinition:
+    containers: list
+    homes: list
+    sources: list
+    spaces: list
+    folders: list
+    vds_list: list
+    reflections: list
+    rules: list
+    queues: list
+    votes: list
+    files: list
+    tags: list
+    wikis: list
+    referenced_users: list
+    referenced_groups: list
+    referenced_roles: list
+    endpoint: str

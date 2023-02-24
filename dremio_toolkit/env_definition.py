@@ -16,11 +16,8 @@
 # Contact dremio@ucesys.com
 #########################################################################
 
-from dataclasses import dataclass
-from typing import Dict, Any
 
 
-@dataclass(frozen=True)
 class EnvDefinition:
     containers: list
     homes: list

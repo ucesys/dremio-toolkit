@@ -22,20 +22,20 @@ from typing import Dict, Any
 
 @dataclass(frozen=True)
 class EnvDefinition:
-    containers: list[Dict[str, Any]]
-    homes: list[Dict[str, Any]]
-    sources: list[Dict[str, Any]]
-    spaces: list[Dict[str, Any]]
-    folders: list[Dict[str, Any]]
-    vds_list: list[Dict[str, Any]]
-    reflections: list[Dict[str, Any]]
-    rules: list[Dict[str, Any]]
-    queues: list[Dict[str, Any]]
-    votes: list[Dict[str, Any]]
-    files: list[Dict[str, Any]]
-    tags: list[Dict[str, Any]]
-    wikis: list[Dict[str, Any]]
-    referenced_users: list[Dict[str, Any]]
-    referenced_groups: list[Dict[str, Any]]
-    referenced_roles: list[Dict[str, Any]]
+    containers: list
+    homes: list
+    sources: list
+    spaces: list
+    folders: list
+    vds_list: list
+    reflections: list
+    rules: list
+    queues: list
+    votes: list
+    files: list
+    tags: list
+    wikis: list
+    referenced_users: list
+    referenced_groups: list
+    referenced_roles: list
     endpoint: str

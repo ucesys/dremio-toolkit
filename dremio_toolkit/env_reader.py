@@ -29,7 +29,7 @@ class ContainerType:
 	SOURCE = "SOURCE"
 
 	@classmethod
-	def all(cls) -> list[str]:
+	def all(cls) -> list:
 		return [cls.HOME, cls.SPACE, cls.SOURCE]
 
 
@@ -41,17 +41,17 @@ class EnvReader:
 		# Current top-level hierarchy context: Home, Space, Source
 		self._top_level_hierarchy_context: Optional[str] = None
 
-		self._containers: list[Dict] = []
-		self._homes: list[Dict] = []
-		self._spaces: list[Dict] = []
-		self._sources: list[Dict] = []
-		self._folders: list[Dict] = []
-		self._vds_list: list[Dict] = []
-		self._tags: list[Dict] = []
-		self._wikis: list[Dict] = []
-		self._referenced_users: list[Dict] = []
-		self._referenced_groups: list[Dict] = []
-		self._referenced_roles: list[Dict] = []
+		self._containers: list = []
+		self._homes: list = []
+		self._spaces: list = []
+		self._sources: list = []
+		self._folders: list = []
+		self._vds_list: list = []
+		self._tags: list = []
+		self._wikis: list = []
+		self._referenced_users: list = []
+		self._referenced_groups: list = []
+		self._referenced_roles: list = []
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
 	def read_dremio_environment(self) -> EnvDefinition:
@@ -166,7 +166,7 @@ class EnvReader:
 		self._logger.warn("Ignoring FILE: ", catalog=file_container)
 
 	# Read All Reflections.
-	def _read_reflections(self) -> list[Dict]:
+	def _read_reflections(self) -> list:
 		self._logger.debug("Reading reflections ...")
 		reflections = self._dremio_env.list_reflections()['data']
 		reflections_with_path = []
@@ -207,19 +207,19 @@ class EnvReader:
 				self._wikis.append(wiki)
 
 	# Read WLM Queues.
-	def _read_queues(self) -> list[Dict]:
+	def _read_queues(self) -> list:
 		self._logger.debug("Reading WLM queues ...")
 		queues = self._dremio_env.list_queues()
 		return queues['data'] if queues and 'data' in queues else []
 
 	# Read WLM Rules.
-	def _read_rules(self) -> list[Dict]:
+	def _read_rules(self) -> list:
 		self._logger.debug("Reading WLM rules ...")
 		rules = self._dremio_env.list_rules()
 		return rules['rules'] if rules and 'rules' in rules else []
 
 	# Read Votes.
-	def _read_votes(self) -> list[Dict]:
+	def _read_votes(self) -> list:
 		self._logger.debug("Reading votes ...")
 		votes = self._dremio_env.list_votes()
 		return votes['data'] if votes and 'data' in votes else []

@@ -31,7 +31,8 @@ def create_snapshot(env_api: EnvApi, logger: Logger, output_file: str, datetime_
 
     EnvFileWriter.save_dremio_environment(env_def, output_file, datetime_utc=datetime_utc)
 
-    assert logger.get_error_count() == 0, "Errors encountered during snapshot creation"
+    if logger.get_error_count() > 0:
+        exit(1)
 
 
 if __name__ == '__main__':

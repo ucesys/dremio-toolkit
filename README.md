@@ -1,6 +1,6 @@
-# Dremio Toolbox
+# Dremio Toolkit
 
-Dremio Toolbox is a python based set of utilities that help with day-to-day Dremio operation.
+Dremio Toolkit is a python based set of utilities that help with day-to-day Dremio operation.
 
 ## create_snapshot
 

@@ -133,7 +133,7 @@ class EnvReader:
 		dataset_entity = self._get_referenced_entity(dataset_container)
 		if dataset_entity is not None:
 			if dataset_container['datasetType'] == "PROMOTED" or dataset_container['datasetType'] == "DIRECT":
-				self._logger.error(
+				self._logger.info(
 					"Unexpected DATASET type: " + dataset_container['datasetType'] + " : ", catalog=dataset_container)
 			elif dataset_container['datasetType'] == "VIRTUAL":
 				if dataset_entity not in self._vds_list:

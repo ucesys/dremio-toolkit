@@ -17,7 +17,6 @@
 #########################################################################
 
 
-
 class EnvDefinition:
     containers: list
     homes: list
@@ -36,3 +35,24 @@ class EnvDefinition:
     referenced_groups: list
     referenced_roles: list
     endpoint: str
+
+    def __init__(self, containers,
+                 homes, spaces, sources, folders, vds_list, reflections, rules, queues, votes, endpoint, tags,
+                 wikis, referenced_users, referenced_groups, referenced_roles, files):
+        self.containers = containers
+        self.homes = homes
+        self.sources = sources
+        self.spaces = spaces
+        self.folders = folders
+        self.vds_list = vds_list
+        self.reflections = reflections
+        self.rules = rules
+        self.queues = queues
+        self.votes = votes
+        self.files = files
+        self.tags = tags
+        self.wikis = wikis
+        self.referenced_users = referenced_users
+        self.referenced_groups = referenced_groups
+        self.referenced_roles = referenced_roles
+        self.endpoint = endpoint

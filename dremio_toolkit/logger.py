@@ -87,7 +87,7 @@ class Logger:
             if 'entityType' in catalog:
                 return message + " " + str(catalog['entityType']) + ":" + Utils.get_str_path(catalog['path'])
             else:
-                return message + " " + self._get_str_path(catalog['path'])
+                return message + " " + Utils.get_str_path(catalog['path'])
         if 'entityType' in catalog:
             if 'name' in catalog:
                 return message + " " + str(catalog['entityType']) + ":" + str(catalog['name'])

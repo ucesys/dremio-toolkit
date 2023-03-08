@@ -19,8 +19,9 @@
 from typing import Dict, Optional
 
 from dremio_toolkit.env_api import EnvApi
-from dremio_toolkit.env_definition import EnvDefinition
+from env_definition import EnvDefinition
 from dremio_toolkit.logger import Logger
+from dremio_toolkit.utils import Utils
 
 
 class ContainerType:
@@ -34,78 +35,56 @@ class ContainerType:
 
 
 class EnvReader:
-	def __init__(self, dremio_env: EnvApi, dremio_tk_logger: Logger):
-		self._dremio_env = dremio_env
-		self._logger = dremio_tk_logger
+	_env_api = None
+	_logger = None
+	_env_def = EnvDefinition()
 
+	def __init__(self, env_api: EnvApi, logger: Logger):
+		self._env_api = env_api
+		self._logger = logger
+		self._env_def.endpoint = env_api.get_env_endpoint()
 		# Current top-level hierarchy context: Home, Space, Source
 		self._top_level_hierarchy_context: Optional[str] = None
-
-		self._containers: list = []
-		self._homes: list = []
-		self._spaces: list = []
-		self._sources: list = []
-		self._folders: list = []
-		self._vds_list: list = []
-		self._tags: list = []
-		self._wikis: list = []
-		self._referenced_users: list = []
-		self._referenced_groups: list = []
-		self._referenced_roles: list = []
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
 	def read_dremio_environment(self) -> EnvDefinition:
 		self._read_catalogs()
-
-		return EnvDefinition(
-			containers=self._containers,
-			homes=self._homes,
-			spaces=self._spaces,
-			sources=self._sources,
-			folders=self._folders,
-			vds_list=self._vds_list,
-			reflections=self._read_reflections(),
-			rules=self._read_rules(),
-			queues=self._read_queues(),
-			votes=self._read_votes(),
-			endpoint=self._dremio_env.get_env_endpoint(),
-			tags=self._tags,
-			wikis=self._wikis,
-			referenced_users=self._referenced_users,
-			referenced_groups=self._referenced_groups,
-			referenced_roles=self._referenced_roles,
-			files=[],
-		)
+		self._read_reflections()
+		self._read_rules()
+		self._read_queues()
+		self._read_votes()
+		return self._env_def
 
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,
-	# and save objects into self._dremio_env_def
+	# and save objects into self._env_api_def
 	def _read_catalogs(self) -> None:
-		containers = self._dremio_env.list_catalogs()['data']
-		for container_id, container in enumerate(containers):
+		containers = self._env_api.list_catalogs()['data']
+		self._logger.new_process_status(len(containers), 'Reading Catalogs. ')
+		for container in containers:
 			container_type = container['containerType']
 			if container_type in ContainerType.all():
 				self._logger.debug(f"Processing {container_type} container: ", catalog=container)
 				self._top_level_hierarchy_context = container_type
 
-				if container not in self._containers:
-					self._containers.append(container)
+				if container not in self._env_def.containers:
+					self._env_def.containers.append(container)
 
 				self._read_entity(container, container_type)
 
 			else:
 				self._logger.fatal("Unexpected catalog type ", catalog=container)
-			self._logger.print_process_status(len(containers), container_id+1)
+			self._logger.print_process_status(increment=1)
 
 	def _read_entity(self, container, container_type) -> None:
 		entity = self._get_referenced_entity(container)
 		if entity is not None:
-			if container_type == ContainerType.HOME and entity not in self._homes:
-				self._homes.append(entity)
-			elif container_type == ContainerType.SPACE and entity not in self._spaces:
-				self._spaces.append(entity)
-			elif container_type == ContainerType.SOURCE and entity not in self._sources:
-				self._sources.append(entity)
+			if container_type == ContainerType.HOME and entity not in self._env_def.homes:
+				self._env_def.homes.append(entity)
+			elif container_type == ContainerType.SPACE and entity not in self._env_def.spaces:
+				self._env_def.spaces.append(entity)
+			elif container_type == ContainerType.SOURCE and entity not in self._env_def.sources:
+				self._env_def.sources.append(entity)
 
 			self._read_entity_acl(entity)
 			self._read_wiki(entity)
@@ -121,8 +100,8 @@ class EnvReader:
 			return
 		folder_entity = self._get_referenced_entity(folder_container)
 		if folder_entity is not None:
-			if folder_entity not in self._folders:
-				self._folders.append(folder_entity)
+			if folder_entity not in self._env_def.folders:
+				self._env_def.folders.append(folder_entity)
 			self._read_entity_acl(folder_entity)
 			self._read_wiki(folder_entity)
 			self._read_space_or_folder_children(folder_entity)
@@ -136,14 +115,15 @@ class EnvReader:
 				self._logger.info(
 					"Unexpected DATASET type: " + dataset_container['datasetType'] + " : ", catalog=dataset_container)
 			elif dataset_container['datasetType'] == "VIRTUAL":
-				if dataset_entity not in self._vds_list:
-					self._vds_list.append(dataset_entity)
+				if dataset_entity not in self._env_def.vds_list:
+					self._env_def.vds_list.append(dataset_entity)
 			else:
 				self._logger.error(
 					"Unexpected DATASET type " + dataset_container['datasetType'] + " for ", catalog=dataset_container)
 			self._read_entity_acl(dataset_entity)
 			self._read_wiki(dataset_entity)
 			self._read_tags(dataset_entity)
+			self._read_vds_graph(dataset_entity)
 
 	# Read Home/Space/Folder container and traverse through its children hierarchy.
 	def _read_space_or_folder_children(self, space) -> None:
@@ -167,62 +147,54 @@ class EnvReader:
 
 	# Read All Reflections.
 	def _read_reflections(self) -> list:
-		self._logger.debug("Reading reflections ...")
-		reflections = self._dremio_env.list_reflections()['data']
-		reflections_with_path = []
+		reflections = self._env_api.list_reflections()['data']
 		for reflection in reflections:
-			reflection_dataset = self._dremio_env.get_catalog(reflection['datasetId'])
+			reflection_dataset = self._env_api.get_catalog(reflection['datasetId'])
 			if reflection_dataset is None:
-				self._logger.debug("Error processing reflection, cannot get path for dataset_container: " + reflection['datasetId'])
+				self._logger.error("Error processing reflection, cannot get path for dataset_container: " + reflection['datasetId'])
 				continue
 			reflection["path"] = reflection_dataset['path']
-			if reflection not in reflections_with_path:
-				reflections_with_path.append(reflection)
-		return reflections_with_path
+			if reflection not in self._env_def.reflections:
+				self._env_def.reflections.append(reflection)
 
 	# Read All Tags for a given catalog.
 	def _read_tags(self, entity) -> None:
 		self._logger.debug("Reading tags for catalog ", catalog=entity)
-		tags = self._dremio_env.get_catalog_tags(entity['id'])
+		tags = self._env_api.get_catalog_tags(entity['id'])
 		if tags is not None:
 			tags['entity_id'] = entity['id']
 			if entity['entityType'] == 'space' or entity['entityType'] == 'source':
 				tags['path'] = [entity['name']]
 			else:
 				tags['path'] = entity['path']
-			if tags not in self._tags:
-				self._tags.append(tags)
+			if tags not in self._env_def.tags:
+				self._env_def.tags.append(tags)
 
 	# Read Wiki for a given catalog.
 	def _read_wiki(self, entity) -> None:
 		self._logger.debug("Reading wiki for catalog ", catalog=entity)
-		wiki = self._dremio_env.get_catalog_wiki(entity['id'])
+		wiki = self._env_api.get_catalog_wiki(entity['id'])
 		if wiki is not None:
 			wiki["entity_id"] = entity['id']
 			if entity['entityType'] == 'space' or entity['entityType'] == 'source' or entity['entityType'] == 'home':
 				wiki['path'] = [entity['name']]
 			else:
 				wiki['path'] = entity['path']
-			if wiki not in self._wikis:
-				self._wikis.append(wiki)
+			if wiki not in self._env_def.wikis:
+				self._env_def.wikis.append(wiki)
 
-	# Read WLM Queues.
 	def _read_queues(self) -> list:
-		self._logger.debug("Reading WLM queues ...")
-		queues = self._dremio_env.list_queues()
-		return queues['data'] if queues and 'data' in queues else []
+		queues = self._env_api.list_queues()
+		self._env_def.queues = queues['data'] if queues and 'data' in queues else []
 
-	# Read WLM Rules.
 	def _read_rules(self) -> list:
-		self._logger.debug("Reading WLM rules ...")
-		rules = self._dremio_env.list_rules()
-		return rules['rules'] if rules and 'rules' in rules else []
+		rules = self._env_api.list_rules()
+		self._env_def.rules = rules['rules'] if rules and 'rules' in rules else []
 
 	# Read Votes.
 	def _read_votes(self) -> list:
-		self._logger.debug("Reading votes ...")
-		votes = self._dremio_env.list_votes()
-		return votes['data'] if votes and 'data' in votes else []
+		votes = self._env_api.list_votes()
+		self._env_def.votes = votes['data'] if votes and 'data' in votes else []
 
 	# Reads Users, Groups, and Roles from entity AccessControlLost
 	def _read_entity_acl(self, entity) -> None:
@@ -231,17 +203,17 @@ class EnvReader:
 			owner_id = entity['owner']['ownerId']
 			owner_type = entity['owner']['ownerType']
 			if owner_type == 'USER':
-				user_entity = self._dremio_env.get_user(owner_id)
-				if user_entity is not None and user_entity not in self._referenced_users:
-					self._referenced_users.append(user_entity)
+				user_entity = self._env_api.get_user(owner_id)
+				if user_entity is not None and user_entity not in self._env_def.referenced_users:
+					self._env_def.referenced_users.append(user_entity)
 			elif owner_type == 'GROUP':
-				group_entity = self._dremio_env.get_group(owner_id)
-				if group_entity is not None and group_entity not in self._referenced_groups:
-					self._referenced_groups.append(group_entity)
+				group_entity = self._env_api.get_group(owner_id)
+				if group_entity is not None and group_entity not in self._env_def.referenced_groups:
+					self._env_def.referenced_groups.append(group_entity)
 			elif owner_type == 'ROLE':
-				role_entity = self._dremio_env.get_role(owner_id)
-				if role_entity is not None and role_entity not in self._referenced_roles:
-					self._referenced_roles.append(role_entity)
+				role_entity = self._env_api.get_role(owner_id)
+				if role_entity is not None and role_entity not in self._env_def.referenced_roles:
+					self._env_def.referenced_roles.append(role_entity)
 			else:
 				self._logger.error("Unexpected OwnerType '" + owner_type + "' for entity ", catalog=entity)
 		# Read AccessControlList
@@ -249,19 +221,19 @@ class EnvReader:
 			acl = entity['accessControlList']
 			if 'users' in acl:
 				for user in acl['users']:
-					user_entity = self._dremio_env.get_user(user['id'])
-					if user_entity is not None and user_entity not in self._referenced_users:
-						self._referenced_users.append(user_entity)
+					user_entity = self._env_api.get_user(user['id'])
+					if user_entity is not None and user_entity not in self._env_def.referenced_users:
+						self._env_def.referenced_users.append(user_entity)
 			if 'groups' in acl:
 				for group in acl['groups']:
-					group_entity = self._dremio_env.get_group(group['id'])
-					if group_entity is not None and group_entity not in self._referenced_groups:
-						self._referenced_groups.append(group_entity)
+					group_entity = self._env_api.get_group(group['id'])
+					if group_entity is not None and group_entity not in self._env_def.referenced_groups:
+						self._env_def.referenced_groups.append(group_entity)
 			if 'roles' in acl:
 				for role in acl['roles']:
-					role_entity = self._dremio_env.get_role(role['id'])
-					if role_entity is not None and role_entity not in self._referenced_roles:
-						self._referenced_roles.append(role_entity)
+					role_entity = self._env_api.get_role(role['id'])
+					if role_entity is not None and role_entity not in self._env_def.referenced_roles:
+						self._env_def.referenced_roles.append(role_entity)
 
 	# Helper method, used by many read* methods
 	def _get_referenced_entity(self, ref) -> Optional[Dict]:
@@ -270,4 +242,13 @@ class EnvReader:
 			self._logger.error("Ref json does not contain catalog 'id', skipping: ", catalog=ref)
 			return None
 		else:
-			return self._dremio_env.get_catalog(ref['id'])
+			return self._env_api.get_catalog(ref['id'])
+
+	def _read_vds_graph(self, vds):
+		graph = self._env_api.get_catalog_graph(vds['id'])
+		if graph is not None:
+			vds_parent_list = []
+			for parent in graph['parents']:
+				vds_parent_list.append(Utils.get_str_path(parent['path']))
+			vds_parent_json = {'id': vds['id'], 'path': vds['path'], 'parents': vds_parent_list}
+			self._env_def.vds_parents.append(vds_parent_json)

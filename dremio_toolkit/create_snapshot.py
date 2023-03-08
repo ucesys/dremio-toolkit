@@ -31,9 +31,6 @@ def create_snapshot(env_api: EnvApi, logger: Logger, output_file: str, datetime_
 
     EnvFileWriter.save_dremio_environment(env_def, output_file, datetime_utc=datetime_utc)
 
-    if logger.get_error_count() > 0:
-        exit(1)
-
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(
@@ -48,9 +45,15 @@ if __name__ == '__main__':
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
     arg_parser.add_argument("-v", "--verbose", help="Set Log to verbose to print object definitions instead of object IDs.",
                             required=False, default=False, action='store_true')
+    arg_parser.add_argument("-f", "--log-file", help="Set Log to write to a specified file instead of STDOUT.",
+                            required=False)
     args = arg_parser.parse_args()
 
-    logger = Logger(level=args.log_level, verbose=args.verbose)
+    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_file)
     env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger)
 
     create_snapshot(env_api=env_api, logger=logger, output_file=args.output_file, datetime_utc=datetime.utcnow())
+
+    logger.finish_process_status_reporting()
+    if logger.get_error_count() > 0:
+        exit(1)

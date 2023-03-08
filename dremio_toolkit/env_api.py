@@ -376,27 +376,27 @@ class EnvApi:
                 return None
             elif response.status_code == 400:
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
-                                   " for : <" + str(url) + ">" + self._get_error_message(response))
+                                   " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
             elif response.status_code == 401 or response.status_code == 403:
                 # Try to re-authenticate since the token might expire
                 if not re_authenticate:
                     return self._http_post(url, json_data, as_json, False)
                 self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response))
+                                      " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
                 raise RuntimeError(self._get_error_message(response))
             elif response.status_code == 409:  # Already exists.
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
-                                   " for : <" + str(url) + ">" + self._get_error_message(response))
+                                   " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
             elif response.status_code == 404:  # Not found
                 self._logger.info("Received HTTP Response Code " + str(response.status_code) +
-                                  " for : <" + str(url) + ">" + self._get_error_message(response))
+                                  " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
             else:
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
-                                   " for : <" + str(url) + ">" + self._get_error_message(response))
+                                   " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
             return None
         except requests.exceptions.Timeout:
             # This situation might happen when an underlying object (file system eg) is not responding
-            self._logger.error("HTTP Request Timed-out: " + " <" + str(url) + ">")
+            self._logger.error("HTTP Request Timed-out: " + " <" + str(url) + ">", catalog=json_data)
             return None
 
     # Executes HTTP PUT. Returns JSON if success or None

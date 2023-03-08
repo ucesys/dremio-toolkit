@@ -23,13 +23,12 @@ from dremio_toolkit.env_definition import EnvDefinition
 
 
 ###
-# This class uses DremioData object to update Dremio environment.
+# This class uses EnvDefinition input object to update Dremio environment.
 ###
 class EnvWriter:
     # Configuration
     _MAX_VDS_HIERARCHY_DEPTH = 10
 
-    _utils = Utils()
     _logger = None
     _env_api = None
     _env_def = None
@@ -40,9 +39,9 @@ class EnvWriter:
     _existing_dremio_roles = []
     _existing_reflections = []
 
-    # Dry run collections
-    _dry_run_processed_vds_list = []
-    _dry_run_processed_pds_list = []
+    # Lists used during VDS ordering
+    _vds_hierarchy = []
+    _referenced_pds = []
 
     def __init__(self, env_api: EnvApi, env_def: EnvDefinition, logger: Logger):
         self._env_api = env_api
@@ -51,34 +50,33 @@ class EnvWriter:
 
     def write_dremio_environment(self) -> None:
         self._retrieve_referenced_acl_principals()
-        self._logger.print_process_status(100, 1)
         self._read_existing_reflections()
-        self._logger.print_process_status(100, 2)
-
         self._write_sources()
-        self._logger.print_process_status(100, 3)
         self._write_spaces()
-        self._logger.print_process_status(100, 4)
         self._write_space_folders()
-        self._logger.print_process_status(100, 5)
+        self._order_vds()
+        self._resolve_referenced_pds()
         self._write_vds()
         self._write_reflections()
         self._write_wiki()
         self._write_tags()
 
     def _retrieve_referenced_acl_principals(self) -> None:
+        self._logger.new_process_status(3, 'Retrieving ACL Users. ')
         for user in self._env_def.referenced_users:
             existing_user = self._env_api.get_user_by_name(user['name'])
             if existing_user is not None:
                 self._existing_dremio_users.append(existing_user)
             else:
                 self._logger.warn("Unable to resolve user in target Dremio environment: ", user)
+        self._logger.new_process_status(3, 'Retrieving ACL Groups. ')
         for group in self._env_def.referenced_groups:
             existing_group = self._env_api.get_group_by_name(group['name'])
             if existing_group is not None:
                 self._existing_dremio_groups.append(existing_group)
             else:
                 self._logger.warn("Unable to resolve group in target Dremio environment: ", group)
+        self._logger.new_process_status(3, 'Retrieving ACL Roles. ')
         for role in self._env_def.referenced_roles:
             existing_role = self._env_api.get_role_by_name(role['name'])
             if existing_role is not None:
@@ -87,50 +85,112 @@ class EnvWriter:
                 self._logger.error("Unable to resolve role in target Dremio environment: ", role)
 
     def _read_existing_reflections(self) -> None:
+        self._logger.new_process_status(3, 'Retrieving Reflections. ')
         reflections = self._env_api.list_reflections()
         self._existing_reflections = reflections['data'] if reflections is not None else []
 
     def _write_sources(self) -> None:
+        self._logger.new_process_status(len(self._env_def.sources), 'Pushing Sources. ')
         for source in self._env_def.sources:
+            self._logger.print_process_status(increment=1)
             self._write_entity(source)
 
     def _write_spaces(self) -> None:
+        self._logger.new_process_status(len(self._env_def.spaces), 'Pushing Spaces. ')
         for space in self._env_def.spaces:
+            self._logger.print_process_status(increment=1)
             self._write_entity(space)
 
     def _write_space_folders(self) -> None:
+        self._logger.new_process_status(len(self._env_def.folders), 'Pushing Space Folders. ')
         for folder in self._env_def.folders:
+            self._logger.print_process_status(increment=1)
             # Drop ACL for HOME folders
             if folder['path'][0][:1] == '@':
-                self._utils.pop_it(folder, "accessControlList")
+                Utils.pop_it(folder, "accessControlList")
             self._write_entity(folder)
 
+    # Process vds_list and save ordered list of VDSs into _vds_hierarchy. Recursive method.
+    def _order_vds(self, processing_level=0):
+        # Verify for the Max Hierarchy Depth
+        if processing_level >= 10:
+            self._logger.debug("Reached level depth limit while ordering VDSs. Still left to process:" +
+                               str(self._env_def.vds_list))
+            return
+        self._logger.new_process_status(len(self._env_def.vds_list), 'Ordering VDS Hierarchy Level ' +
+                                        str(processing_level) + '. ')
+        any_vds_leveled = False
+        # Iterate through the remainder VDS in the list
+        # Go with decreasing index so we can remove VDS from the list
+        vds_count = len(self._env_def.vds_list)
+        for i in range(vds_count - 1, -1, -1):
+            self._logger.print_process_status(increment=1)
+            vds = self._env_def.vds_list[i]
+            vds_hierarchy_level = processing_level
+            sql_dependency_paths = self._get_vds_dependency_paths(vds)
+            if sql_dependency_paths:
+                for path in sql_dependency_paths:
+                    sql_context = Utils.get_sql_context(vds)
+                    dependency_vds = self._find_vds_by_path(Utils.get_absolute_path(path, sql_context))
+                    if dependency_vds is None:
+                        # Assume it's PDS since json file should have all VDS
+                        Utils.append_unique_list(self._referenced_pds, Utils.get_absolute_path(path, sql_context))
+                        continue
+                    else:
+                        # Dependency was found as VDS
+                        dependency_hierarchy_level = self._find_vds_level_in_hierarchy(dependency_vds['id'])
+                        if dependency_hierarchy_level is None:
+                            # Dependency has not been processed yet, push this VDS to the next processing level
+                            vds_hierarchy_level = None
+                            break
+                        # Find the highest level of hierarchy among dependencies
+                        elif vds_hierarchy_level < dependency_hierarchy_level + 1:
+                            vds_hierarchy_level = dependency_hierarchy_level + 1
+            if vds_hierarchy_level is None:
+                continue
+            else:
+                self._vds_hierarchy.append([vds_hierarchy_level, vds])
+                self._env_def.vds_list.remove(vds)
+                # Mark this hierarchy level as successful
+                any_vds_leveled = True
+        # Are we done yet with recursion
+        if not any_vds_leveled or len(self._env_def.vds_list) == 0:
+            return
+        # Process the next Hierarchy Level recursively
+        self._order_vds(processing_level + 1)
+
+    def _resolve_referenced_pds(self):
+        self._logger.new_process_status(len(self._referenced_pds), 'Resoving/Promoting Referenced PDS. ')
+        for path in self._referenced_pds:
+            pds = self._find_pds_by_path(path)
+            if pds is None:
+                # PDS could not be resolved.
+                self._logger.error("Unable to resolve/promote PDS: " + path)
+            self._logger.print_process_status(increment=1)
+
     def _write_vds(self) -> None:
+        self._logger.new_process_status(len(self._vds_hierarchy), 'Pushing VDS Hierarchy. ')
         # Iterate through VDS until all VDS have been successfully pushed to the target environment or
         # no VDS has been successfully pushed during the last iteration
-        total_vds_count = len(self._env_def.vds_list)
-        while self._env_def.vds_list:
-            any_vds_pushed = False
-            # These are VDSs that have all dependencies validated but could not be placed in the hierarchy
-            for i in range(len(self._env_def.vds_list) - 1, -1, -1):
-                vds = self._env_def.vds_list[i]
-                if self._write_entity(vds):
-                    self._env_def.vds_list.remove(vds)
-                    any_vds_pushed = True
-                self._logger.print_process_status(total_vds_count, total_vds_count-len(self._env_def.vds_list))
-            if not any_vds_pushed:
-                str_vds_list = str(self._env_def.vds_list)
-                self._logger.error("Was not able to push the following VDS: " + str_vds_list)
+        for level in range(0, 10, 1):
+            for i in range(len(self._vds_hierarchy)-1, -1, -1):
+                if level == self._vds_hierarchy[i][0]:
+                    vds = self._vds_hierarchy[i][1]
+                    if self._write_entity(vds):
+                        self._vds_hierarchy.pop(i)
+                    self._logger.print_process_status(increment=1)
+        if self._vds_hierarchy:
+            self._logger.error("Was not able to push the following VDS: ", object_list=self._vds_hierarchy)
+        if self._env_def.vds_list:
+            self._logger.error("Was not able to push the following VDS: ", object_list=self._env_def.vds_list)
 
     def _write_entity(self, entity: dict) -> bool:
         # Prepare JSON object for saving to target Dremio environment
         # Clean up attributes that are automatically maintained by Dremio Environment
-        self._utils.pop_it(entity, ['id', 'tag', 'children', 'createdAt'])
+        Utils.pop_it(entity, ['id', 'tag', 'children', 'createdAt'])
         self._process_acl(entity)
         existing_entity = self._get_existing_entity(entity)
-        if existing_entity is None:  # Need to create new entity
-            if 'accessControlList' in entity:
-                entity['accessControlList']['version'] = "0"
+        if existing_entity is None:
             new_entity = self._env_api.create_catalog(entity)
             if new_entity is None:
                 return False
@@ -140,7 +200,7 @@ class EnvWriter:
             entity['tag'] = existing_entity['tag']
             # Update ACL version for proper concurrency control
             if ('path' in entity and entity['path'][0][:1] == '@') or ('name' in entity and entity['name'][:1] == '@'):
-                self._utils.pop_it(entity, 'accessControlList')
+                Utils.pop_it(entity, 'accessControlList')
             else:
                 if 'accessControlList' in existing_entity and 'version' in existing_entity['accessControlList']:
                     entity['accessControlList']['version'] = existing_entity['accessControlList']['version']
@@ -152,10 +212,10 @@ class EnvWriter:
     def _write_reflections(self) -> None:
         for reflection in self._env_def.reflections:
             reflection_path = reflection['path']
-            self._utils.pop_it(reflection, ['id', 'tag', 'createdAt', 'updatedAt', 'currentSizeBytes', 'totalSizeBytes', 'status', 'canView', 'canAlter', 'path'])
+            Utils.pop_it(reflection, ['id', 'tag', 'createdAt', 'updatedAt', 'currentSizeBytes', 'totalSizeBytes', 'status', 'canView', 'canAlter', 'path'])
             reflected_dataset = self._env_api.get_catalog_by_path(Utils.get_str_path(reflection_path))
             if reflected_dataset is None:
-                self._logger.error("Could not resolve reflected dataset for reflection: " + reflection)
+                self._logger.error("Could not resolve reflected dataset for reflection: ", reflection)
                 continue
             reflection['datasetId'] = reflected_dataset['id']
             # Check if the reflection already exists
@@ -306,3 +366,35 @@ class EnvWriter:
                     self._logger.error("Error updating tags ", tags)
                     continue
 
+    def _get_vds_dependency_paths(self, vds):
+        for vds_entry in self._env_def.vds_parents:
+            if vds_entry['path'] == vds['path']:
+                return vds_entry['parents']
+
+    def _find_vds_by_path(self, path):
+        # First, try finding in the VDS list from the source file
+        for vds in self._env_def.vds_list:
+            if path == Utils.get_str_path(vds['path']):
+                return vds
+        for vds_hierarchy in self._vds_hierarchy:
+            if path == Utils.get_str_path(vds_hierarchy[1]['path']):
+                return vds_hierarchy[1]
+        return None
+
+    def _find_pds_by_path(self, path):
+        # Try finding in the target environment
+        entity = self._env_api.get_catalog_by_path(path)
+        # Ignore this condition as we can get folder instead for a valid PDS: Make sure we get promoted PDS and not folder/file
+        if entity is None:
+            return None
+        elif Utils.is_pds(entity):
+            return entity
+        else:
+            return self._env_api.promote_pds(entity)
+        return None
+
+    def _find_vds_level_in_hierarchy(self, vds_id):
+        for item in self._vds_hierarchy:
+            if item[1]['id'] == vds_id:
+                return item[0]
+        return None

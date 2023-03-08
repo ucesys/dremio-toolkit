@@ -18,8 +18,7 @@
 
 import argparse
 
-from dremio_toolkit.env_api import EnvApi
-from dremio_toolkit.env_writer import EnvWriter
+from dremio_toolkit.env_diff import EnvDiff
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
 
@@ -30,12 +29,9 @@ if __name__ == '__main__':
         description='create_snapshot is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and saves it as a JSON file.',
         epilog='Copyright UCE Systems Corp. For any assistance contact developer at dremio@ucesys.com'
     )
-    arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
-    arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
-    arg_parser.add_argument("-p", "--password", help="User password.", required=True)
-    arg_parser.add_argument("-i", "--input-filename", help="Json file name with snapshot of Dremio environment.", required=True)
-    arg_parser.add_argument("-r", "--dry-run", help="Whether it's a dry run or changes should be made to the target "
-                                                    "Dremio environment.", required=False, default=False)
+    arg_parser.add_argument("-b", "--base-filename", help="Json file name with snapshot of the 'base' Dremio environment.", required=True)
+    arg_parser.add_argument("-c", "--comp-filename", help="Json file name with snapshot of the 'comp' Dremio environment.", required=True)
+    arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the 'diff' report.", required=True)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
     arg_parser.add_argument("-v", "--verbose", help="Set Log to verbose to print object definitions instead of object IDs.",
@@ -47,10 +43,10 @@ if __name__ == '__main__':
     # Process command
     logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_file)
     file_reader = EnvFileReader()
-    env_def = file_reader.read_dremio_environment(args.input_filename)
-    env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger, dry_run=args.dry_run)
-    env_writer = EnvWriter(env_api, env_def, logger)
-    env_writer.write_dremio_environment()
+    base_env_def = file_reader.read_dremio_environment(args.base_filename)
+    comp_env_def = file_reader.read_dremio_environment(args.comp_filename)
+    env_diff = EnvDiff(logger)
+    env_diff.diff_snapshot(base_env_def, comp_env_def)
 
     # Return process status to the OS
     logger.finish_process_status_reporting()

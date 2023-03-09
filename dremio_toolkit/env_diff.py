@@ -18,6 +18,7 @@
 
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_definition import EnvDefinition
+import os
 
 
 class DiffType:
@@ -64,6 +65,27 @@ class EnvDiff:
         self._diff_queues()
         self._diff_tags()
         self._diff_wikis()
+
+    def write_report(self, filename: str):
+        if os.path.isfile(filename):
+            os.remove(filename)
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write('| object_type | message | base | comp |\n')
+            self._write_report_diff_object(f, 'container', self.diff_containers)
+            self._write_report_diff_object(f, 'source', self.diff_sources)
+            self._write_report_diff_object(f, 'space', self.diff_spaces)
+            self._write_report_diff_object(f, 'folder', self.diff_folders)
+            self._write_report_diff_object(f, 'vds', self.diff_vds)
+            self._write_report_diff_object(f, 'reflection', self.diff_reflections)
+            self._write_report_diff_object(f, 'rule', self.diff_rules)
+            self._write_report_diff_object(f, 'queue', self.diff_queues)
+            self._write_report_diff_object(f, 'tag', self.diff_tags)
+            self._write_report_diff_object(f, 'wiki', self.diff_wikis)
+
+    def _write_report_diff_object(self, file, object_type: str, diff_object_list: list):
+        for diff_object in diff_object_list:
+            file.write('|' + diff_object['message'] + '|' + str(diff_object['base']) + '|' +
+                       str(diff_object['comp']) + '|\n')
 
     def _diff_containers(self):
         self._diff_lists(self._base_def.containers, self._comp_def.containers, 'path', ['containerType'], self.diff_containers)

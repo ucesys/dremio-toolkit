@@ -36,18 +36,14 @@ class DiffType:
 class EnvDiff:
     diff_containers = []
     diff_sources = []
-    homes = []
-    sources = []
-    spaces = []
-    folders = []
-    vds_list = []
-    reflections = []
-    rules = []
-    queues = []
-    votes = []
-    files = []
-    tags = []
-    wikis = []
+    diff_spaces = []
+    diff_folders = []
+    diff_vds = []
+    diff_reflections = []
+    diff_rules = []
+    diff_queues = []
+    diff_tags = []
+    diff_wikis = []
 
     _base_def: EnvDefinition
     _comp_def: EnvDefinition
@@ -60,6 +56,14 @@ class EnvDiff:
         self._comp_def = comp_env_def
         self._diff_containers()
         self._diff_sources()
+        self._diff_spaces()
+        self._diff_folders()
+        self._diff_vds()
+        self._diff_reflections()
+        self._diff_rules()
+        self._diff_queues()
+        self._diff_tags()
+        self._diff_wikis()
 
     def _diff_containers(self):
         self._diff_lists(self._base_def.containers, self._comp_def.containers, 'path', ['containerType'], self.diff_containers)
@@ -71,6 +75,48 @@ class EnvDiff:
                   'checkTableAuthorizer', 'config', 'disableMetadataValidityCheck', 'entityType',
                   'metadataPolicy', 'owner', 'permissions', 'type']
         self._diff_lists(self._base_def.sources, self._comp_def.sources, 'name', fields, self.diff_sources)
+        return None
+
+    def _diff_spaces(self):
+        fields = ['entityType', 'accessControlList', 'owner']
+        self._diff_lists(self._base_def.spaces, self._comp_def.spaces, 'name', fields, self.diff_spaces)
+        return None
+
+    def _diff_folders(self):
+        fields = ['entityType', 'accessControlList', 'owner']
+        self._diff_lists(self._base_def.folders, self._comp_def.folders, 'path', fields, self.diff_folders)
+        return None
+
+    def _diff_vds(self):
+        fields = ['entityType', 'accessControlList', 'owner', 'fields', 'sql', 'sqlContext', 'type']
+        self._diff_lists(self._base_def.vds_list, self._comp_def.vds_list, 'path', fields, self.diff_vds)
+        return None
+
+    def _diff_reflections(self):
+        fields = ['arrowCachingEnabled', 'canAlter', 'canView', 'enabled', 'entityType', 'name',
+                  'partitionDistributionStrategy', 'type',
+                  {'status': ['availability', 'combinedStatus', 'config', 'refresh']}]
+        self._diff_lists(self._base_def.reflections, self._comp_def.reflections, 'path', fields, self.diff_reflections)
+        return None
+
+    def _diff_rules(self):
+        fields = ['acceptName', 'action', 'conditions']
+        self._diff_lists(self._base_def.rules, self._comp_def.rules, 'name', fields, self.diff_rules)
+        return None
+
+    def _diff_queues(self):
+        fields = ['cpuTier', 'maxAllowedRunningJobs', 'maxStartTimeoutMs']
+        self._diff_lists(self._base_def.queues, self._comp_def.queues, 'name', fields, self.diff_queues)
+        return None
+
+    def _diff_tags(self):
+        fields = ['tags']
+        self._diff_lists(self._base_def.tags, self._comp_def.tags, 'path', fields, self.diff_tags)
+        return None
+
+    def _diff_wikis(self):
+        fields = ['text']
+        self._diff_lists(self._base_def.wikis, self._comp_def.wikis, 'path', fields, self.diff_wikis)
         return None
 
     def _diff_lists(self, base_list: list, comp_list: list, uid, fields: [], report_list: list):
@@ -102,10 +148,16 @@ class EnvDiff:
                 self._report_diff(report_list, comp=comp_item, message='Extra item in Comp Environment')
 
     def _diff_item(self, base_item: dict, comp_item: dict, uid, fields: []) -> int:
-        if base_item[uid] != comp_item[uid]:
+        # Verify UID for recursive calls
+        if uid is not None and base_item[uid] != comp_item[uid]:
             return DiffType.DIFF_UID
         for field in fields:
-            if field not in base_item and field not in comp_item:
+            if type(field) == dict:
+                for key in field.keys():
+                    diff = self._diff_item(base_item[key], comp_item[key], None, field[key])
+                    if diff != DiffType.MATCH:
+                        return diff
+            elif field not in base_item and field not in comp_item:
                 pass
             elif field not in base_item or field not in comp_item:
                 return DiffType.MISSING_ATTRIBUTE

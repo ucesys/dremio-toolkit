@@ -27,3 +27,14 @@ This simple command can read json file produced by <b>create_snapshot</b> comman
 ```commandline
 PYTHONPATH=./ python dremio_toolkit/push_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -i <INPUT_FILE>
 ```
+
+
+## diff_snapshot
+
+This  command reads two json files (base and comp) produced by <b>create_snapshot</b> command and produces a json file with a report on difference. 
+<br><br>It's useful functionality when you clone an environment and want to validate that the code in the cloned (comp) Dremio environment is the same to the base environment.
+
+### Syntax
+```commandline
+PYTHONPATH=./ python dremio_toolkit/diff_snapshot.py -b <BASE_JSON_FILE> -c <COMP_JSON_FILE> -r <REPORT_JSON_FILE>
+```

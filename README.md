@@ -1,6 +1,12 @@
 # Dremio Toolkit
 
-Dremio Toolkit is a python based set of utilities that help with day-to-day Dremio operation.
+Dremio Toolkit is a python based utility that helps with day-to-day Dremio operations.  These functions include: object backup (create_snapshot), object restore (push_snapshot) and differences between two backups (diff_snapshot)
+
+While Dremio provides a backup utility out of the box. It allows to take a backup and restore a Dremio environment in its entirety. However, sometimes it's not practical to restore the entire environment. You may need to restore only a few of virtual data sets, spaces, or sources without impacting the entire Dremio environment.  Using a combination of these functions allows you to create a CI/CD deployment of Dremio objects.
+
+Another useful application of this utility is to create a clone of the existing environment.
+
+Dremio Toolkit uses Dremio API’s only and can be run without impact on Dremio operation.
 
 ## create_snapshot
 
@@ -20,7 +26,7 @@ PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_
 
 ## push_snapshot
 
-This simple command can read json file produced by <b>create_snapshot</b> command and push it to a target environment. You can make modifications to the json file prior to pushing it to reflect only changes that you desire to push.
+This simple command reads json file produced by <b>create_snapshot</b> command and pushes it to a target environment. You can make modifications to the json file prior to pushing it to reflect only changes that you desire to push.
 <br><br>
 
 ### Syntax

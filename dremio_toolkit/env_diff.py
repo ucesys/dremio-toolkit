@@ -25,14 +25,14 @@ import json
 class DiffType:
     MATCH = 0
     DIFF_UID = 1
-    DIFF_ATTRIBUTES = 2
+    DIFF_ATTRIBUTE = 2
     MISSING_ATTRIBUTE = 3
     DIFF_PERMISSIONS = 4
     DIFF_OWNER = 5
 
     @classmethod
     def all(cls) -> list:
-        return [cls.MATCH, cls.DIFF_UID, cls.DIFF_ATTRIBUTES]
+        return [cls.MATCH, cls.DIFF_UID, cls.DIFF_ATTRIBUTE]
 
 
 class EnvDiff:
@@ -157,16 +157,16 @@ class EnvDiff:
         for base_item in base_list:
             match_found = False
             for comp_item in comp_list:
-                diff = self._diff_item(base_item, comp_item, uid, fields)
+                diff, explanation = self._diff_item(base_item, comp_item, uid, fields)
                 if diff == DiffType.MATCH:
                     match_found = True
                     break
-                elif diff == DiffType.DIFF_ATTRIBUTES:
-                    self._report_diff(report_list, base_item, comp_item, message='Different attributes.')
+                elif diff == DiffType.DIFF_ATTRIBUTE:
+                    self._report_diff(report_list, base_item, comp_item, message='Different attribute. ', explanation=explanation)
                     match_found = True
                     break
                 elif diff == DiffType.MISSING_ATTRIBUTE:
-                    self._report_diff(report_list, base_item, message='Missing attribute.')
+                    self._report_diff(report_list, base_item, message='Missing attribute.', explanation=explanation)
                     match_found = True
                     break
             if not match_found:
@@ -174,7 +174,7 @@ class EnvDiff:
         for comp_item in comp_list:
             match_found = False
             for base_item in base_list:
-                diff = self._diff_item(base_item, comp_item, uid, fields)
+                diff, explanation = self._diff_item(base_item, comp_item, uid, fields)
                 if diff != DiffType.DIFF_UID:  # Matching paths have been evaluated in prior loop
                     match_found = True
                     break
@@ -184,7 +184,7 @@ class EnvDiff:
     def _diff_item(self, base_item: dict, comp_item: dict, uid, fields: []) -> int:
         # Verify UID for recursive calls
         if uid is not None and base_item[uid] != comp_item[uid]:
-            return DiffType.DIFF_UID
+            return DiffType.DIFF_UID, uid
         for field in fields:
             if type(field) == dict:
                 for key in field.keys():
@@ -194,7 +194,7 @@ class EnvDiff:
             elif field not in base_item and field not in comp_item:
                 pass
             elif field not in base_item or field not in comp_item:
-                return DiffType.MISSING_ATTRIBUTE
+                return DiffType.MISSING_ATTRIBUTE, field
             elif field == 'accessControlList':
                 diff_acl = self._diff_acl(base_item[field], comp_item[field])
                 if diff_acl != DiffType.MATCH:
@@ -202,10 +202,10 @@ class EnvDiff:
             elif field == 'owner':
                 dif_owner = self._diff_owner(base_item[field], comp_item[field])
                 if dif_owner != DiffType.MATCH:
-                    return dif_owner
+                    return dif_owner, field
             elif base_item[field] != comp_item[field]:
-                return DiffType.DIFF_ATTRIBUTES
-        return DiffType.MATCH
+                return DiffType.DIFF_ATTRIBUTE, field
+        return DiffType.MATCH, None
 
     def _diff_owner(self, base_owner, comp_owner) -> int:
         if base_owner['ownerType'] != comp_owner['ownerType']:
@@ -274,5 +274,5 @@ class EnvDiff:
                 return principal['name']
         return None
 
-    def _report_diff(self, report_list: list, base: dict = None, comp: dict = None, message: str = None):
-        report_list.append({"base": base, "comp": comp, "message": message})
+    def _report_diff(self, report_list: list, base: dict = None, comp: dict = None, message: str = None, explanation=None):
+        report_list.append({"base": base, "comp": comp, "message": message, "explanation": explanation})

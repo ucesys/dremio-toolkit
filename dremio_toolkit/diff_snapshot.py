@@ -47,7 +47,7 @@ if __name__ == '__main__':
     comp_env_def = file_reader.read_dremio_environment(args.comp_filename)
     env_diff = EnvDiff(logger)
     env_diff.diff_snapshot(base_env_def, comp_env_def)
-    env_diff.write_report(args.report_filename)
+    env_diff.write_diff_report(args.report_filename)
 
     # Return process status to the OS
     logger.finish_process_status_reporting()

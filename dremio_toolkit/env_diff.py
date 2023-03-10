@@ -19,6 +19,7 @@
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_definition import EnvDefinition
 import os
+import json
 
 
 class DiffType:
@@ -76,26 +77,27 @@ class EnvDiff:
         self._diff_wikis()
         self._logger.print_process_status(complete=100)
 
-    def write_report(self, filename: str):
+    def write_diff_report(self, filename: str):
         if os.path.isfile(filename):
             os.remove(filename)
+        diff_json = {
+            "diff": [
+                {"base": self._base_def.endpoint},
+                {"comp": self._comp_def.endpoint},
+                {"containers": self.diff_containers},
+                {"sources": self.diff_sources},
+                {"spaces": self.diff_spaces},
+                {"folders": self.diff_folders},
+                {"vds": self.diff_vds},
+                {"reflections": self.diff_reflections},
+                {"rules": self.diff_rules},
+                {"queues": self.diff_queues},
+                {"tags": self.diff_tags},
+                {"wikis": self.diff_wikis}
+            ]
+        }
         with open(filename, "w", encoding="utf-8") as f:
-            f.write('| object_type | object_id | message | base | comp |\n')
-            self._write_report_diff_object(f, 'container', 'path', self.diff_containers)
-            self._write_report_diff_object(f, 'source', 'name', self.diff_sources)
-            self._write_report_diff_object(f, 'space', 'name', self.diff_spaces)
-            self._write_report_diff_object(f, 'folder', 'path', self.diff_folders)
-            self._write_report_diff_object(f, 'vds', 'path', self.diff_vds)
-            self._write_report_diff_object(f, 'reflection', 'path', self.diff_reflections)
-            self._write_report_diff_object(f, 'rule', 'name', self.diff_rules)
-            self._write_report_diff_object(f, 'queue', 'name', self.diff_queues)
-            self._write_report_diff_object(f, 'tag', 'path', self.diff_tags)
-            self._write_report_diff_object(f, 'wiki', 'path', self.diff_wikis)
-
-    def _write_report_diff_object(self, file, object_type: str, object_id: str, diff_object_list: list):
-        for diff_object in diff_object_list:
-            file.write('|' + object_type + '|' + diff_object['message'] + '|' +
-                       str(diff_object['base']) + '|' + str(diff_object['comp']) + '|\n')
+            json.dump(diff_json, f, indent=4, sort_keys=True)
 
     def _diff_containers(self):
         self._diff_lists(self._base_def.containers, self._comp_def.containers, 'path', ['containerType'], self.diff_containers)
@@ -160,7 +162,7 @@ class EnvDiff:
                     match_found = True
                     break
                 elif diff == DiffType.DIFF_ATTRIBUTES:
-                    self._report_diff(report_list, base_item, message='Different attributes.')
+                    self._report_diff(report_list, base_item, comp_item, message='Different attributes.')
                     match_found = True
                     break
                 elif diff == DiffType.MISSING_ATTRIBUTE:

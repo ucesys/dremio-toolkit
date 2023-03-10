@@ -33,7 +33,9 @@ class EnvFileReader:
         env_def = EnvDefinition()
         for item in data:
             if 'dremio_environment' in item:
-                pass
+                for env_item in item['dremio_environment']:
+                    if 'endpoint' in env_item:
+                        env_def.endpoint = env_item['endpoint']
             elif 'containers' in item:
                 env_def.containers = item['containers']
             elif 'homes' in item:

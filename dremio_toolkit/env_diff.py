@@ -55,37 +55,47 @@ class EnvDiff:
     def diff_snapshot(self, base_env_def: EnvDefinition, comp_env_def: EnvDefinition) -> None:
         self._base_def = base_env_def
         self._comp_def = comp_env_def
+        self._logger.new_process_status(100,'Comparing snapshots. ')
         self._diff_containers()
+        self._logger.print_process_status(complete=5)
         self._diff_sources()
+        self._logger.print_process_status(complete=10)
         self._diff_spaces()
+        self._logger.print_process_status(complete=15)
         self._diff_folders()
+        self._logger.print_process_status(complete=30)
         self._diff_vds()
+        self._logger.print_process_status(complete=80)
         self._diff_reflections()
+        self._logger.print_process_status(complete=85)
         self._diff_rules()
         self._diff_queues()
+        self._logger.print_process_status(complete=90)
         self._diff_tags()
+        self._logger.print_process_status(complete=95)
         self._diff_wikis()
+        self._logger.print_process_status(complete=100)
 
     def write_report(self, filename: str):
         if os.path.isfile(filename):
             os.remove(filename)
         with open(filename, "w", encoding="utf-8") as f:
-            f.write('| object_type | message | base | comp |\n')
-            self._write_report_diff_object(f, 'container', self.diff_containers)
-            self._write_report_diff_object(f, 'source', self.diff_sources)
-            self._write_report_diff_object(f, 'space', self.diff_spaces)
-            self._write_report_diff_object(f, 'folder', self.diff_folders)
-            self._write_report_diff_object(f, 'vds', self.diff_vds)
-            self._write_report_diff_object(f, 'reflection', self.diff_reflections)
-            self._write_report_diff_object(f, 'rule', self.diff_rules)
-            self._write_report_diff_object(f, 'queue', self.diff_queues)
-            self._write_report_diff_object(f, 'tag', self.diff_tags)
-            self._write_report_diff_object(f, 'wiki', self.diff_wikis)
+            f.write('| object_type | object_id | message | base | comp |\n')
+            self._write_report_diff_object(f, 'container', 'path', self.diff_containers)
+            self._write_report_diff_object(f, 'source', 'name', self.diff_sources)
+            self._write_report_diff_object(f, 'space', 'name', self.diff_spaces)
+            self._write_report_diff_object(f, 'folder', 'path', self.diff_folders)
+            self._write_report_diff_object(f, 'vds', 'path', self.diff_vds)
+            self._write_report_diff_object(f, 'reflection', 'path', self.diff_reflections)
+            self._write_report_diff_object(f, 'rule', 'name', self.diff_rules)
+            self._write_report_diff_object(f, 'queue', 'name', self.diff_queues)
+            self._write_report_diff_object(f, 'tag', 'path', self.diff_tags)
+            self._write_report_diff_object(f, 'wiki', 'path', self.diff_wikis)
 
-    def _write_report_diff_object(self, file, object_type: str, diff_object_list: list):
+    def _write_report_diff_object(self, file, object_type: str, object_id: str, diff_object_list: list):
         for diff_object in diff_object_list:
-            file.write('|' + diff_object['message'] + '|' + str(diff_object['base']) + '|' +
-                       str(diff_object['comp']) + '|\n')
+            file.write('|' + object_type + '|' + diff_object['message'] + '|' +
+                       str(diff_object['base']) + '|' + str(diff_object['comp']) + '|\n')
 
     def _diff_containers(self):
         self._diff_lists(self._base_def.containers, self._comp_def.containers, 'path', ['containerType'], self.diff_containers)

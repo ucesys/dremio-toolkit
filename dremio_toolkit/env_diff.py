@@ -77,7 +77,7 @@ class EnvDiff:
         self._diff_wikis()
         self._logger.print_process_status(complete=100)
 
-    def write_diff_report(self, filename: str):
+    def write_diff_report(self, filename: str) -> None:
         if os.path.isfile(filename):
             os.remove(filename)
         diff_json = {
@@ -99,61 +99,51 @@ class EnvDiff:
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(diff_json, f, indent=4, sort_keys=True)
 
-    def _diff_containers(self):
+    def _diff_containers(self) -> None:
         self._diff_lists(self._base_def.containers, self._comp_def.containers, 'path', ['containerType'], self.diff_containers)
-        return None
 
-    def _diff_sources(self):
+    def _diff_sources(self) -> None:
         fields = ['accelerationGracePeriodMs', 'accelerationNeverExpire', 'accelerationNeverRefresh',
                   'accelerationRefreshPeriodMs', 'accessControlList', 'allowCrossSourceSelection',
                   'checkTableAuthorizer', 'config', 'disableMetadataValidityCheck', 'entityType',
                   'metadataPolicy', 'owner', 'permissions', 'type']
         self._diff_lists(self._base_def.sources, self._comp_def.sources, 'name', fields, self.diff_sources)
-        return None
 
-    def _diff_spaces(self):
+    def _diff_spaces(self) -> None:
         fields = ['entityType', 'accessControlList', 'owner']
         self._diff_lists(self._base_def.spaces, self._comp_def.spaces, 'name', fields, self.diff_spaces)
-        return None
 
-    def _diff_folders(self):
+    def _diff_folders(self) -> None:
         fields = ['entityType', 'accessControlList', 'owner']
         self._diff_lists(self._base_def.folders, self._comp_def.folders, 'path', fields, self.diff_folders)
-        return None
 
-    def _diff_vds(self):
+    def _diff_vds(self) -> None:
         fields = ['entityType', 'accessControlList', 'owner', 'fields', 'sql', 'sqlContext', 'type']
         self._diff_lists(self._base_def.vds_list, self._comp_def.vds_list, 'path', fields, self.diff_vds)
-        return None
 
-    def _diff_reflections(self):
+    def _diff_reflections(self) -> None:
         fields = ['arrowCachingEnabled', 'canAlter', 'canView', 'enabled', 'entityType', 'name',
                   'partitionDistributionStrategy', 'type',
                   {'status': ['availability', 'combinedStatus', 'config', 'refresh']}]
         self._diff_lists(self._base_def.reflections, self._comp_def.reflections, 'path', fields, self.diff_reflections)
-        return None
 
-    def _diff_rules(self):
+    def _diff_rules(self) -> None:
         fields = ['acceptName', 'action', 'conditions']
         self._diff_lists(self._base_def.rules, self._comp_def.rules, 'name', fields, self.diff_rules)
-        return None
 
-    def _diff_queues(self):
+    def _diff_queues(self) -> None:
         fields = ['cpuTier', 'maxAllowedRunningJobs', 'maxStartTimeoutMs']
         self._diff_lists(self._base_def.queues, self._comp_def.queues, 'name', fields, self.diff_queues)
-        return None
 
-    def _diff_tags(self):
+    def _diff_tags(self) -> None:
         fields = ['tags']
         self._diff_lists(self._base_def.tags, self._comp_def.tags, 'path', fields, self.diff_tags)
-        return None
 
-    def _diff_wikis(self):
+    def _diff_wikis(self) -> None:
         fields = ['text']
         self._diff_lists(self._base_def.wikis, self._comp_def.wikis, 'path', fields, self.diff_wikis)
-        return None
 
-    def _diff_lists(self, base_list: list, comp_list: list, uid, fields: [], report_list: list):
+    def _diff_lists(self, base_list: list, comp_list: list, uid, fields: [], report_list: list) -> None:
         for base_item in base_list:
             match_found = False
             for comp_item in comp_list:
@@ -162,15 +152,15 @@ class EnvDiff:
                     match_found = True
                     break
                 elif diff == DiffType.DIFF_ATTRIBUTE:
-                    self._report_diff(report_list, base_item, comp_item, message='Different attribute. ', explanation=explanation)
+                    self._report_diff(report_list, base_item, comp_item, diff='Different attribute. ', msg=explanation)
                     match_found = True
                     break
                 elif diff == DiffType.MISSING_ATTRIBUTE:
-                    self._report_diff(report_list, base_item, message='Missing attribute.', explanation=explanation)
+                    self._report_diff(report_list, base_item, diff='Missing attribute.', msg=explanation)
                     match_found = True
                     break
             if not match_found:
-                self._report_diff(report_list, base_item, message='Item is missing in Comp Environment')
+                self._report_diff(report_list, base_item, diff='Item is missing in Comp Environment')
         for comp_item in comp_list:
             match_found = False
             for base_item in base_list:
@@ -179,9 +169,9 @@ class EnvDiff:
                     match_found = True
                     break
             if not match_found:
-                self._report_diff(report_list, comp=comp_item, message='Extra item in Comp Environment')
+                self._report_diff(report_list, comp=comp_item, diff='Extra item in Comp Environment')
 
-    def _diff_item(self, base_item: dict, comp_item: dict, uid, fields: []) -> int:
+    def _diff_item(self, base_item: dict, comp_item: dict, uid: str, fields: []):
         # Verify UID for recursive calls
         if uid is not None and base_item[uid] != comp_item[uid]:
             return DiffType.DIFF_UID, uid
@@ -207,7 +197,7 @@ class EnvDiff:
                 return DiffType.DIFF_ATTRIBUTE, field
         return DiffType.MATCH, None
 
-    def _diff_owner(self, base_owner, comp_owner) -> int:
+    def _diff_owner(self, base_owner: dict, comp_owner: dict) -> int:
         if base_owner['ownerType'] != comp_owner['ownerType']:
             return DiffType.DIFF_OWNER
         if base_owner['ownerType'] == 'USER':
@@ -232,7 +222,7 @@ class EnvDiff:
             else:
                 return DiffType.DIFF_OWNER
 
-    def _diff_acl(self, base_acl, comp_acl) -> int:
+    def _diff_acl(self, base_acl: dict, comp_acl: dict) -> int:
         diff_users = self._diff_acl_permissions('users', base_acl, comp_acl,
                                                 self._base_def.referenced_users, self._comp_def.referenced_users)
         if diff_users != DiffType.MATCH:
@@ -247,7 +237,8 @@ class EnvDiff:
             return diff_roles
         return DiffType.MATCH
 
-    def _diff_acl_permissions(self, principal_type: str, base_acl, comp_acl, base_referenced_principals, comp_referenced_principals):
+    def _diff_acl_permissions(self, principal_type: str, base_acl: dict, comp_acl: dict,
+                              base_referenced_principals: list, comp_referenced_principals: list):
         if base_acl == {} and comp_acl == {}:
             return DiffType.MATCH
         if principal_type in base_acl and principal_type in comp_acl:
@@ -274,5 +265,5 @@ class EnvDiff:
                 return principal['name']
         return None
 
-    def _report_diff(self, report_list: list, base: dict = None, comp: dict = None, message: str = None, explanation=None):
-        report_list.append({"base": base, "comp": comp, "message": message, "explanation": explanation})
+    def _report_diff(self, report_list: list, base: dict = None, comp: dict = None, diff: str = None, msg=None):
+        report_list.append({"base": base, "comp": comp, "diff": diff, "message": msg})

@@ -52,3 +52,22 @@ class Utils:
         if '/' not in path and sql_context is not None and sql_context != "":
             path = Utils.get_str_path(sql_context) + "/" + path
         return path
+
+    @staticmethod
+    def get_sql_context(entity):
+        return entity["sqlContext"] if "sqlContext" in entity else None
+
+    @staticmethod
+    def is_vds(entity):
+        return entity['entityType'] == 'dataset' and entity['type'] == 'VIRTUAL_DATASET'
+
+    @staticmethod
+    def is_pds(entity):
+        return entity['entityType'] == 'dataset' and entity['type'] == 'PHYSICAL_DATASET'
+
+    @staticmethod
+    def get_absolute_path(path, sql_context):
+        path = Utils.get_str_path(path)
+        if '/' not in path and sql_context is not None and sql_context != "":
+            path = Utils.get_str_path(sql_context) + "/" + path
+        return path

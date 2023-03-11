@@ -42,6 +42,7 @@ class EnvFileWriter:
                 {'spaces': env_def.spaces},
                 {'folders': env_def.folders},
                 {'vds': env_def.vds_list},
+                {'vds_parents': env_def.vds_parents},
                 {'files': env_def.files},
                 {'reflections': env_def.reflections},
                 {'queues': env_def.queues},

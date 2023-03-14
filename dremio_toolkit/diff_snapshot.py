@@ -31,7 +31,7 @@ if __name__ == '__main__':
     )
     arg_parser.add_argument("-b", "--base-filename", help="Json file name with snapshot of the 'base' Dremio environment.", required=True)
     arg_parser.add_argument("-c", "--comp-filename", help="Json file name with snapshot of the 'comp' Dremio environment.", required=True)
-    arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the 'diff' report.", required=True)
+    arg_parser.add_argument("-r", "--report-filename", help="Json file name for the 'diff' report.", required=True)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
     arg_parser.add_argument("-v", "--verbose", help="Set Log to verbose to print object definitions instead of object IDs.",

@@ -17,22 +17,24 @@
 #########################################################################
 
 
+# Data Class to contain definition of Dremio Environment
 class EnvDefinition:
-    containers: list
-    homes: list
-    sources: list
-    spaces: list
-    folders: list
-    vds_list: list
-    reflections: list
-    rules: list
-    queues: list
-    votes: list
-    files: list
-    tags: list
-    wikis: list
-    referenced_users: list
-    referenced_groups: list
-    referenced_roles: list
-    endpoint: str
+    containers = []
+    homes = []
+    sources = []
+    spaces = []
+    folders = []
+    vds_list = []
+    vds_parents = []
+    reflections = []
+    rules = []
+    queues = []
+    votes = []
+    files = []
+    tags = []
+    wikis = []
+    referenced_users = []
+    referenced_groups = []
+    referenced_roles = []
+    endpoint: str = None
 

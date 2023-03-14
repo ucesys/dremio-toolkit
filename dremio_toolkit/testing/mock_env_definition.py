@@ -22,25 +22,7 @@ from dremio_toolkit.env_definition import EnvDefinition
 
 
 def mock_env_definition() -> EnvDefinition:
-    return EnvDefinition(
-        containers=containers(),
-        homes=homes(),
-        spaces=spaces(),
-        sources=sources(),
-        reflections=reflections(),
-        rules=rules(),
-        queues=queues(),
-        folders=folders(),
-        vds_list=vds(),
-        tags=tags(),
-        wikis=wikis(),
-        referenced_users=referenced_users(),
-        referenced_roles=referenced_roles(),
-        endpoint="http://localhost:9047/",
-        votes=[],
-        files=[],
-        referenced_groups=[],
-    )
+    return EnvDefinition()
 
 
 def containers() -> List[Dict[str, Any]]:

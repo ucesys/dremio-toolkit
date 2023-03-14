@@ -17,12 +17,12 @@
 #########################################################################
 
 from typing import Dict, Optional
-
 from dremio_toolkit.env_api import EnvApi
 from env_definition import EnvDefinition
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.utils import Utils
-
+import time
+import os
 
 class ContainerType:
 	HOME = "HOME"
@@ -47,13 +47,47 @@ class EnvReader:
 		self._top_level_hierarchy_context: Optional[str] = None
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
-	def read_dremio_environment(self) -> EnvDefinition:
+	def read_dremio_environment(self, report_file: str) -> EnvDefinition:
+		self._report_home_objects(report_file)
 		self._read_catalogs()
 		self._read_reflections()
 		self._read_rules()
 		self._read_queues()
 		self._read_votes()
 		return self._env_def
+
+	def _report_home_objects(self, report_file: str) -> None:
+		if report_file is None:
+			self._logger.warn("Exception report file name has not been supplied with report-file argument. Report file will not be produced.")
+			return
+		sql = "SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.\\\"TABLES\\\" WHERE POSITION('@' IN TABLE_SCHEMA)=1"
+		jobid = self._env_api.submit_sql(sql)
+		# Wait for the job to complete. Should only take a moment
+		while True:
+			job_info = self._env_api.get_job_info(jobid)
+			if job_info is None or job_info["jobState"] in ['CANCELED', 'FAILED']:
+				self._logger.fatal("Unexpected error. Cannot get a list of INFORMATION_SCHEMA.TABLES.")
+			if job_info["jobState"] == 'COMPLETED':
+				break
+			time.sleep(1)
+		# Retrieve list of TABLES
+		job_result = self._env_api.get_job_result(jobid)
+		num_rows = int(job_result['rowCount'])
+		if num_rows == 0:
+			return
+		# Prep report file
+		if os.path.isfile(report_file):
+			os.remove(report_file)
+		with open(report_file, "w", encoding="utf-8") as f:
+			f.write("TABLE_SCHEMA,TABLE_NAME,TABLE_TYPE\n")
+			# Page through the results, 100 rows per page
+			limit = 100
+			for i in range(0, int(num_rows / limit) + 1):
+				job_result = self._env_api.get_job_result(jobid, limit * i, limit)
+				if job_result is not None:
+					for row in job_result['rows']:
+						if row['TABLE_TYPE'] != 'VIEW' or self._env_api.get_username() != row['TABLE_SCHEMA'][1:]:
+							f.write(row['TABLE_SCHEMA'] + "," + row['TABLE_NAME'] + "," + row['TABLE_TYPE'] + '\n')
 
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,

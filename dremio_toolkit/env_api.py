@@ -125,6 +125,9 @@ class EnvApi:
     def get_catalog_graph(self, catalog_id):
         return self._http_get(self._catalog + catalog_id + '/' + self._graph_postfix)
 
+    def get_username(self):
+        return self._username
+
     # Returns the information of a user by username
     # https://docs.dremio.com/software/rest-api/user/get-user-2/
     def get_user_by_name(self, username):

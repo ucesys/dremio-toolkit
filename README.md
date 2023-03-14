@@ -8,6 +8,8 @@ Another useful application of this utility is to create a clone of the existing 
 
 Dremio Toolkit uses Dremio API’s only and can be run without impact on Dremio operation.
 
+Dremio Toolkit supports only Dremio Enterprise software. It does not support Community Edition.
+
 ## create_snapshot
 
 Dremio provides a backup utility out of the box. 
@@ -20,7 +22,7 @@ We recommend to take a snapshot of the Development environment on a daily basis.
 
 ### Syntax
 ```commandline
-PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -o <OUTPUT_FILE>
+PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -o <OUTPUT_FILE> -r <REPORT_JSON_FILE>
 ```
 
 

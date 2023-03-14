@@ -25,7 +25,7 @@ from dremio_toolkit.env_definition import EnvDefinition
 
 class EnvFileWriter:
     @staticmethod
-    def save_dremio_environment(env_def: EnvDefinition, output_file: str, datetime_utc: datetime) -> None:
+    def save_dremio_environment(env_def: EnvDefinition, output_file: str) -> None:
         if os.path.isfile(output_file):
             os.remove(output_file)
 
@@ -34,7 +34,7 @@ class EnvFileWriter:
                 {'dremio_environment': [
                     {'file_version': '1.0'},
                     {"endpoint": env_def.endpoint},
-                    {'timestamp_utc': str(datetime_utc)}
+                    {'timestamp_utc': str(datetime.utcnow())}
                 ]},
                 {'containers': env_def.containers},
                 {'homes': env_def.homes},

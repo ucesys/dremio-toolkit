@@ -18,7 +18,7 @@
 
 from typing import Dict, Optional
 from dremio_toolkit.env_api import EnvApi
-from env_definition import EnvDefinition
+from dremio_toolkit.env_definition import EnvDefinition
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.utils import Utils
 import time

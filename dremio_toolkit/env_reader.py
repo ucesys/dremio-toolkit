@@ -39,6 +39,8 @@ class EnvReader:
 	_logger = None
 	_env_def = EnvDefinition()
 
+	RD = '|'
+
 	def __init__(self, env_api: EnvApi, logger: Logger):
 		self._env_api = env_api
 		self._logger = logger
@@ -48,19 +50,23 @@ class EnvReader:
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
 	def read_dremio_environment(self, report_file: str) -> EnvDefinition:
-		self._report_home_objects(report_file)
 		self._read_catalogs()
 		self._read_reflections()
 		self._read_rules()
 		self._read_queues()
 		self._read_votes()
+		self._report_home_objects(report_file)
 		return self._env_def
 
 	def _report_home_objects(self, report_file: str) -> None:
 		if report_file is None:
 			self._logger.warn("Exception report file name has not been supplied with report-file argument. Report file will not be produced.")
 			return
-		sql = "SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE FROM INFORMATION_SCHEMA.\\\"TABLES\\\" WHERE POSITION('@' IN TABLE_SCHEMA)=1"
+		self._logger.new_process_status(100, 'Reporting Exceptions.')
+		sql = "SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT " \
+			  "FROM SYS.\\\"VIEWS\\\" V " \
+			  "JOIN SYS.\\\"USERS\\\" U ON V.OWNER_ID = U.USER_ID " \
+			  "WHERE POSITION('@' IN PATH)=2 OR POSITION('@' IN SQL_CONTEXT)=1 "
 		jobid = self._env_api.submit_sql(sql)
 		# Wait for the job to complete. Should only take a moment
 		while True:
@@ -79,15 +85,16 @@ class EnvReader:
 		if os.path.isfile(report_file):
 			os.remove(report_file)
 		with open(report_file, "w", encoding="utf-8") as f:
-			f.write("TABLE_SCHEMA,TABLE_NAME,TABLE_TYPE\n")
+			f.write("OWNER_USER_NAME" + self.RD + "VIEW_NAME" + self.RD + "PATH" + self.RD + "NOTES\n")
 			# Page through the results, 100 rows per page
 			limit = 100
 			for i in range(0, int(num_rows / limit) + 1):
 				job_result = self._env_api.get_job_result(jobid, limit * i, limit)
 				if job_result is not None:
 					for row in job_result['rows']:
-						if row['TABLE_TYPE'] != 'VIEW' or self._env_api.get_username() != row['TABLE_SCHEMA'][1:]:
-							f.write(row['TABLE_SCHEMA'] + "," + row['TABLE_NAME'] + "," + row['TABLE_TYPE'] + '\n')
+						f.write(row['OWNER_USER_NAME'] + self.RD + row['VIEW_NAME'] + self.RD + row['PATH'] + self.RD +
+								"SQL_CONTEXT:" + row['SQL_CONTEXT'] +
+								" SQL_DEFINITION:" + row['SQL_DEFINITION'] + '\n')
 
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,

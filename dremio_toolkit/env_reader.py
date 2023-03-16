@@ -39,8 +39,6 @@ class EnvReader:
 	_logger = None
 	_env_def = EnvDefinition()
 
-	RD = '|'
-
 	def __init__(self, env_api: EnvApi, logger: Logger):
 		self._env_api = env_api
 		self._logger = logger
@@ -49,16 +47,16 @@ class EnvReader:
 		self._top_level_hierarchy_context: Optional[str] = None
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
-	def read_dremio_environment(self, report_file: str) -> EnvDefinition:
+	def read_dremio_environment(self, report_file: str, delimiter:str) -> EnvDefinition:
 		self._read_catalogs()
 		self._read_reflections()
 		self._read_rules()
 		self._read_queues()
 		self._read_votes()
-		self._report_home_objects(report_file)
+		self._report_exceptions(report_file, delimiter=delimiter)
 		return self._env_def
 
-	def _report_home_objects(self, report_file: str) -> None:
+	def _report_exceptions(self, report_file: str, delimiter: str = '\t') -> None:
 		if report_file is None:
 			self._logger.warn("Exception report file name has not been supplied with report-file argument. Report file will not be produced.")
 			return
@@ -85,16 +83,15 @@ class EnvReader:
 		if os.path.isfile(report_file):
 			os.remove(report_file)
 		with open(report_file, "w", encoding="utf-8") as f:
-			f.write("OWNER_USER_NAME" + self.RD + "VIEW_NAME" + self.RD + "PATH" + self.RD + "NOTES\n")
+			f.write("OWNER_USER_NAME" + delimiter + "VIEW_NAME" + delimiter + "PATH" + delimiter + "NOTES\n")
 			# Page through the results, 100 rows per page
 			limit = 100
 			for i in range(0, int(num_rows / limit) + 1):
 				job_result = self._env_api.get_job_result(jobid, limit * i, limit)
 				if job_result is not None:
 					for row in job_result['rows']:
-						f.write(row['OWNER_USER_NAME'] + self.RD + row['VIEW_NAME'] + self.RD + row['PATH'] + self.RD +
-								"SQL_CONTEXT:" + row['SQL_CONTEXT'] +
-								" SQL_DEFINITION:" + row['SQL_DEFINITION'] + '\n')
+						f.write(row['OWNER_USER_NAME'] + delimiter + row['VIEW_NAME'] + delimiter +
+								row['PATH'] + delimiter + "SQL_CONTEXT:" + row['SQL_CONTEXT'] + '\n')
 
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,

@@ -25,9 +25,13 @@ class Utils:
     # Pop all items from container definition
     @staticmethod
     def pop_it(container, items):
-        for item in items:
-            if item in container:
-                container.pop(item)
+        if type(items) is list:
+            for item in items:
+                if item in container:
+                    container.pop(item)
+        else:
+            if items in container:
+                container.pop(items)
 
     # Appends a list if the item does not exist in the list yet
     @staticmethod

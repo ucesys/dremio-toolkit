@@ -47,18 +47,17 @@ class EnvReader:
 		self._top_level_hierarchy_context: Optional[str] = None
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
-	def read_dremio_environment(self, report_file: str, delimiter:str) -> EnvDefinition:
+	def read_dremio_environment(self) -> EnvDefinition:
 		self._read_catalogs()
 		self._read_reflections()
 		self._read_rules()
 		self._read_queues()
 		self._read_votes()
-		self._report_exceptions(report_file, delimiter=delimiter)
 		return self._env_def
 
-	def _report_exceptions(self, report_file: str, delimiter: str = '\t') -> None:
+	def write_exception_report(self, report_file: str, delimiter: str = '\t') -> None:
 		if report_file is None:
-			self._logger.warn("Exception report file name has not been supplied with report-file argument. Report file will not be produced.")
+			self._logger.warn("Exception report file name has not been supplied with report-filename argument. Report file will not be produced.")
 			return
 		self._logger.new_process_status(100, 'Reporting Exceptions.')
 		sql = "SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT " \

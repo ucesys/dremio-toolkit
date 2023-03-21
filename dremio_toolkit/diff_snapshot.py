@@ -36,12 +36,12 @@ if __name__ == '__main__':
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
     arg_parser.add_argument("-v", "--verbose", help="Set Log to verbose to print object definitions instead of object IDs.",
                             required=False, default=False, action='store_true')
-    arg_parser.add_argument("-f", "--log-file", help="Set Log to write to a specified file instead of STDOUT.",
+    arg_parser.add_argument("-f", "--log-filename", help="Set Log to write to a specified file instead of STDOUT.",
                             required=False)
     args = arg_parser.parse_args()
 
     # Process command
-    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_file)
+    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_filename)
     file_reader = EnvFileReader()
     base_env_def = file_reader.read_dremio_environment(args.base_filename)
     comp_env_def = file_reader.read_dremio_environment(args.comp_filename)

@@ -93,7 +93,7 @@ class EnvApi:
         response = requests.request("POST", self._endpoint + self._login, data=payload,
                                     headers=headers, timeout=self._api_timeout, verify=self._verify_ssl)
         if response.status_code != 200:
-            self._logger.critical("Authentication Error " + str(response.status_code))
+            self._logger.fatal("Authentication Error " + str(response.status_code))
         self._token = '_dremio' + response.json()['token']
         self._headers = {"Content-Type": "application/json", "Authorization": self._token}
 
@@ -338,8 +338,8 @@ class EnvApi:
                 # Try to re-authenticate once since the token might expire
                 if not re_authenticate:
                     return self._http_get(url, True)
-                self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response))
+                self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
+                                   " for : <" + str(url) + ">" + self._get_error_message(response))
                 raise RuntimeError(self._get_error_message(response))
             else:
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
@@ -384,8 +384,8 @@ class EnvApi:
                 # Try to re-authenticate since the token might expire
                 if not re_authenticate:
                     return self._http_post(url, json_data, as_json, False)
-                self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
+                self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
+                                   " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
                 raise RuntimeError(self._get_error_message(response))
             elif response.status_code == 409:  # Already exists.
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
@@ -417,9 +417,9 @@ class EnvApi:
             elif response.status_code == 401 or response.status_code == 403:
                 # Try to re-authenticate since the token might expire
                 if not re_authenticate:
-                    return self._http_put(url, json_data, False)
-                self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response))
+                    return self._http_put(url, json_data, True)
+                self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
+                                   " for : <" + str(url) + ">" + self._get_error_message(response))
                 raise RuntimeError(self._get_error_message(response))
             elif response.status_code == 409:  # A catalog catalog with the specified path already exists.
                 self._logger.error("Received HTTP Response Code 409 for : <" + str(url) + ">" +
@@ -457,8 +457,8 @@ class EnvApi:
                 # Try to re-authenticate since the token might expire
                 if not re_authenticate:
                     return self._http_delete(url, False)
-                self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response))
+                self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
+                                   " for : <" + str(url) + ">" + self._get_error_message(response))
                 raise RuntimeError(self._get_error_message(response))
             elif response.status_code == 409:  # A catalog catalog with the specified path already exists.
                 self._logger.error("Received HTTP Response Code 409 for : <" + str(url) + ">" +

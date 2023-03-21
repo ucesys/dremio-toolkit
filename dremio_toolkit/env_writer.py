@@ -15,7 +15,8 @@
 #
 # Contact dremio@ucesys.com
 #########################################################################
-
+import json
+import os
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_api import EnvApi
@@ -60,6 +61,21 @@ class EnvWriter:
         self._write_reflections()
         self._write_wiki()
         self._write_tags()
+
+    def write_exception_report(self, report_file: str, delimiter: str = '\t') -> None:
+        if report_file is None:
+            self._logger.warn(
+                "Exception report file name has not been supplied with report-filename argument. Report file will not be produced.")
+            return
+        # Prep report file
+        if os.path.isfile(report_file):
+            os.remove(report_file)
+        with open(report_file, "w", encoding="utf-8") as f:
+            f.write("HIERARCHY_LEVEL" + delimiter + "PATH" + delimiter + "ID" + "\n")
+            for vds in self._env_def.vds_list:
+                f.write('' + delimiter + vds['path'] + delimiter + vds['id'] + '\n')
+            for vds in self._vds_hierarchy:
+                f.write(vds[0] + delimiter + vds[1]['path'] + delimiter + vds[1]['id'] + '\n')
 
     def _retrieve_referenced_acl_principals(self) -> None:
         self._logger.new_process_status(3, 'Retrieving ACL Users. ')
@@ -107,7 +123,7 @@ class EnvWriter:
             self._logger.print_process_status(increment=1)
             # Drop ACL for HOME folders
             if folder['path'][0][:1] == '@':
-                Utils.pop_it(folder, "accessControlList")
+                Utils.pop_it(folder, ["accessControlList"])
             self._write_entity(folder)
 
     # Process vds_list and save ordered list of VDSs into _vds_hierarchy. Recursive method.
@@ -180,9 +196,11 @@ class EnvWriter:
                         self._vds_hierarchy.pop(i)
                     self._logger.print_process_status(increment=1)
         if self._vds_hierarchy:
-            self._logger.error("Was not able to push the following VDS: ", object_list=self._vds_hierarchy)
+            self._logger.error("Unable to push " + str(len(self._vds_hierarchy)) +
+                               " VDSs from processed hierarchy. See exception report for details.")
         if self._env_def.vds_list:
-            self._logger.error("Was not able to push the following VDS: ", object_list=self._env_def.vds_list)
+            self._logger.error("Unable to process hierarchy for " + str(len(self._env_def.vds_list)) +
+                               " VDSs. See exception report for details.")
 
     def _write_entity(self, entity: dict) -> bool:
         # Prepare JSON object for saving to target Dremio environment

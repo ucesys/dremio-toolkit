@@ -22,8 +22,7 @@ from dremio_toolkit.env_diff import EnvDiff
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
 
-if __name__ == '__main__':
-
+def parse_args():
     # Process arguments
     arg_parser = argparse.ArgumentParser(
         description='create_snapshot is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and saves it as a JSON file.',
@@ -38,19 +37,26 @@ if __name__ == '__main__':
                             required=False, default=False, action='store_true')
     arg_parser.add_argument("-f", "--log-filename", help="Set Log to write to a specified file instead of STDOUT.",
                             required=False)
-    args = arg_parser.parse_args()
+    parsed_args = arg_parser.parse_args()
+    return parsed_args
 
+def diff_snapshot(base_filename, comp_filename, report_filename, log_level, log_filename, verbose):
     # Process command
-    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_filename)
+    logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
     file_reader = EnvFileReader()
-    base_env_def = file_reader.read_dremio_environment(args.base_filename)
-    comp_env_def = file_reader.read_dremio_environment(args.comp_filename)
+    base_env_def = file_reader.read_dremio_environment(base_filename)
+    comp_env_def = file_reader.read_dremio_environment(comp_filename)
     env_diff = EnvDiff(logger)
     env_diff.diff_snapshot(base_env_def, comp_env_def)
-    env_diff.write_diff_report(args.report_filename)
+    env_diff.write_diff_report(report_filename)
 
     # Return process status to the OS
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
         exit(1)
 
+
+if __name__ == '__main__':
+    args = parse_args()
+    diff_snapshot(args.base_filename, args.comp_filename, args.report_filename,
+                  args.log_level, args.log_filename, args.verbose)

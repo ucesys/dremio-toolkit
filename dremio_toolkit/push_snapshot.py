@@ -17,14 +17,13 @@
 #########################################################################
 
 import argparse
-
 from dremio_toolkit.env_api import EnvApi
 from dremio_toolkit.env_writer import EnvWriter
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
 
-if __name__ == '__main__':
 
+def parse_args():
     # Process arguments
     arg_parser = argparse.ArgumentParser(
         description='create_snapshot is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and saves it as a JSON file.',
@@ -42,21 +41,31 @@ if __name__ == '__main__':
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
     arg_parser.add_argument("-v", "--verbose", help="Set Log to verbose to print object definitions instead of object IDs.",
                             required=False, default=False, action='store_true')
-    arg_parser.add_argument("-f", "--log-file", help="Set Log to write to a specified file instead of STDOUT.",
+    arg_parser.add_argument("-f", "--log-filename", help="Set Log to write to a specified file instead of STDOUT.",
                             required=False)
-    args = arg_parser.parse_args()
+    parsed_args = arg_parser.parse_args()
+    return parsed_args
 
+
+def push_snapshot(input_filename, dremio_environment_url, user, password, dry_run, report_filename, report_delimiter,
+                  log_level, log_filename, verbose):
     # Process command
-    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_file)
+    logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
     file_reader = EnvFileReader()
-    env_def = file_reader.read_dremio_environment(args.input_filename)
-    env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger, dry_run=args.dry_run)
+    env_def = file_reader.read_dremio_environment(input_filename)
+    env_api = EnvApi(dremio_environment_url, user, password, logger, dry_run=dry_run)
     env_writer = EnvWriter(env_api, env_def, logger)
     env_writer.write_dremio_environment()
-    env_writer.write_exception_report(args.report_filename)
+    env_writer.write_exception_report(report_filename, report_delimiter)
 
     # Return process status to the OS
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
         exit(1)
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    push_snapshot(args.input_filename, args.dremio_environment_url, args.user, args.password, args.dry_run,
+                    args.report_filename, args.report_delimiter, args.log_level, args.log_filename, args.verbose)
 

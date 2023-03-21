@@ -43,7 +43,7 @@ def parse_args():
     arg_parser.add_argument("-f", "--log-filename", help="Set Log to write to a specified file instead of STDOUT.",
                             required=False)
     parsed_args = arg_parser.parse_args()
-    if args.report_file is None:
+    if parsed_args.report_filename is None:
         print("report-file argument has not been specified. Exception report will not be produced.")
     return parsed_args
 

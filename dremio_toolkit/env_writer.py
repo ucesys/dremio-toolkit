@@ -65,7 +65,7 @@ class EnvWriter:
         self._write_space_folders()
         self._order_vds()
         self._resolve_referenced_pds()
-#        self._write_vds()
+        self._write_vds()
         self._write_reflections()
         self._write_wiki()
         self._write_tags()

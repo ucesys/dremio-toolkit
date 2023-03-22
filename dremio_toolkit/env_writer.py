@@ -81,25 +81,25 @@ class EnvWriter:
         with open(report_file, "w", encoding="utf-8") as f:
             f.write("OBJECT_TYPE" + delimiter + "ID" + delimiter + "PATH or NAME" + delimiter + "NOTES" + "\n")
             for vds in self._env_def.vds_list:
-                f.write('VDS' + delimiter + vds['id'] if 'id' in vds else '' + delimiter + str(vds['path']) +
+                f.write('VDS' + delimiter + (vds['id'] if 'id' in vds else '') + delimiter + str(vds['path']) +
                         delimiter + '' + '\n')
             for vds in self._vds_hierarchy:
-                f.write('VDS' + delimiter + vds[1]['id'] if 'id' in vds[1] else '' + delimiter + str(vds[1]['path']) +
+                f.write('VDS' + delimiter + (vds[1]['id'] if 'id' in vds[1] else '') + delimiter + str(vds[1]['path']) +
                         delimiter + 'Hierarchy Level: ' + str(vds[0]) + '\n')
             for source in self._failed_sources:
-                f.write('SOURCE' + delimiter + source['id'] if 'id' in source else '' + delimiter + source['name'] +
+                f.write('SOURCE' + delimiter + (source['id'] if 'id' in source else '') + delimiter + source['name'] +
                         delimiter + '' + '\n')
             for space in self._failed_spaces:
-                f.write('SPACE' + delimiter + space['id'] if 'id' in space else '' + delimiter + space['name'] +
+                f.write('SPACE' + delimiter + (space['id'] if 'id' in space else '') + delimiter + space['name'] +
                         delimiter + '' + '\n')
             for folder in self._failed_folders:
-                f.write('FOLDER' + delimiter + folder['id'] if 'id' in folder else '' + delimiter +
+                f.write('FOLDER' + delimiter + (folder['id'] if 'id' in folder else '') + delimiter +
                         str(folder['path']) + delimiter + '' + '\n')
             for wiki in self._failed_wiki:
-                f.write('WIKI' + delimiter + wiki['id'] if 'id' in wiki else '' + delimiter + str(wiki['path']) +
+                f.write('WIKI' + delimiter + (wiki['id'] if 'id' in wiki else '') + delimiter + str(wiki['path']) +
                         delimiter + '' + '\n')
             for tags in self._failed_tags:
-                f.write('TAGS' + delimiter + tags['id'] if 'id' in tags else '' + delimiter + str(tags['path']) +
+                f.write('TAGS' + delimiter + (tags['id'] if 'id' in tags else '') + delimiter + str(tags['path']) +
                         delimiter + '' + '\n')
 
     def _retrieve_referenced_acl_principals(self) -> None:

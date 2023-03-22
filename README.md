@@ -25,6 +25,17 @@ We recommend to take a snapshot of the Development environment on a daily basis.
 PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -o <OUTPUT_FILE> -r <REPORT_JSON_FILE>
 ```
 
+### Arguments
+    -d or --dremio-environment-url : URL to Dremio environment.
+    -u or --user : Dremio user name. User must be a Dremio admin.
+    -p or --password : Dremio user password.
+    -o or --output-filename : Json file name to save Dremio environment.
+    -r or --report-filename : CSV file name for the exception report.
+    -e or --report-delimiter : Delimiter to use in the exception report. Default is tab.
+    -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
+    -v or --verbose : Set Log to verbose to print object definitions instead of object IDs.
+    -f or --log-filename : Set Log to write to a specified file instead of STDOUT.
+
 
 ## push_snapshot
 
@@ -36,6 +47,18 @@ This simple command reads json file produced by <b>create_snapshot</b> command a
 PYTHONPATH=./ python dremio_toolkit/push_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -i <INPUT_FILE>
 ```
 
+### Arguments
+    -d or --dremio-environment-url : URL to Dremio environment.
+    -u or --user : User name. User must be a Dremio admin.
+    -p or --password : User password.
+    -i or --input-filename : Json file name with snapshot of Dremio environment.
+    -y or --dry-run : Whether it's a dry run or changes should be made to the target.
+    -r or --report-filename : CSV file name for the exception' report.
+    -e or --report-delimiter : Delimiter to use in the exception report. Default is tab.
+    -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
+    -v or --verbose : Set Log to verbose to print object definitions instead of object IDs.
+    -f or --log-filename : Set Log to write to a specified file instead of STDOUT."
+
 
 ## diff_snapshot
 
@@ -46,3 +69,12 @@ This  command reads two json files (base and comp) produced by <b>create_snapsho
 ```commandline
 PYTHONPATH=./ python dremio_toolkit/diff_snapshot.py -b <BASE_JSON_FILE> -c <COMP_JSON_FILE> -r <REPORT_JSON_FILE>
 ```
+
+### Arguments
+
+    -b or --base-filename : Json file name with snapshot of the 'base' Dremio environment.
+    -c or --comp-filename : Json file name with snapshot of the 'comp' Dremio environment.
+    -r or --report-filename : Json file name for the 'diff' report.
+    -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
+    -v or --verbose : Set Log to verbose to print object definitions instead of object IDs.
+    -f or --log-filename : Set Log to write to a specified file instead of STDOUT.

@@ -250,8 +250,10 @@ class EnvWriter:
             else:
                 if 'accessControlList' in existing_entity and 'version' in existing_entity['accessControlList']:
                     entity['accessControlList']['version'] = existing_entity['accessControlList']['version']
-            updated_entity = self._env_api.update_catalog(entity['id'], entity)
+            updated_entity = self._env_api.update_catalog(existing_entity['id'], entity)
             if updated_entity is None:
+                # Remove id from the entity for proper reporting
+                Utils.pop_it(entity, ['id'])
                 return False
         return True
 

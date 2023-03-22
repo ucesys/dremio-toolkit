@@ -69,7 +69,7 @@ This  command reads two json files (base and comp) produced by <b>create_snapsho
 ```commandline
 PYTHONPATH=./ python dremio_toolkit/diff_snapshot.py -b <BASE_JSON_FILE> -c <COMP_JSON_FILE> -r <REPORT_JSON_FILE>
 ```
-
+ 
 ### Arguments
 
     -b or --base-filename : Json file name with snapshot of the 'base' Dremio environment.

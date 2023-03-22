@@ -44,6 +44,14 @@ class EnvWriter:
     _vds_hierarchy = []
     _referenced_pds = []
 
+    # Lists of failed objects
+    _failed_sources = []
+    _failed_spaces = []
+    _failed_folders = []
+    _failed_reflections = []
+    _failed_wiki = []
+    _failed_tags = []
+
     def __init__(self, env_api: EnvApi, env_def: EnvDefinition, logger: Logger):
         self._env_api = env_api
         self._env_def = env_def
@@ -71,11 +79,21 @@ class EnvWriter:
         if os.path.isfile(report_file):
             os.remove(report_file)
         with open(report_file, "w", encoding="utf-8") as f:
-            f.write("HIERARCHY_LEVEL" + delimiter + "PATH" + delimiter + "ID" + "\n")
+            f.write("OBJECT_TYPE" + delimiter + "ID" + delimiter + "PATH or NAME" + delimiter + "NOTES" + "\n")
             for vds in self._env_def.vds_list:
-                f.write('' + delimiter + vds['path'] + delimiter + vds['id'] + '\n')
+                f.write('VDS' + delimiter + vds['id'] + delimiter + vds['path'] + delimiter + '' + '\n')
             for vds in self._vds_hierarchy:
-                f.write(vds[0] + delimiter + vds[1]['path'] + delimiter + vds[1]['id'] + '\n')
+                f.write('VDS' + delimiter + vds[1]['id'] + delimiter + vds[1]['path'] + delimiter + 'Hierarchy Level: ' + vds[0] + '\n')
+            for source in self._failed_sources:
+                f.write('SOURCE' + delimiter + source['id'] + delimiter + source['name'] + delimiter + '' + '\n')
+            for space in self._failed_spaces:
+                f.write('SPACE' + delimiter + space['id'] + delimiter + space['name'] + delimiter + '' + '\n')
+            for folder in self._failed_folders:
+                f.write('FOLDER' + delimiter + folder['id'] + delimiter + folder['path'] + delimiter + '' + '\n')
+            for wiki in self._failed_wiki:
+                f.write('WIKI' + delimiter + wiki['id'] + delimiter + wiki['path'] + delimiter + '' + '\n')
+            for tags in self._failed_tags:
+                f.write('TAGS' + delimiter + tags['id'] + delimiter + tags['path'] + delimiter + '' + '\n')
 
     def _retrieve_referenced_acl_principals(self) -> None:
         self._logger.new_process_status(3, 'Retrieving ACL Users. ')
@@ -109,13 +127,15 @@ class EnvWriter:
         self._logger.new_process_status(len(self._env_def.sources), 'Pushing Sources. ')
         for source in self._env_def.sources:
             self._logger.print_process_status(increment=1)
-            self._write_entity(source)
+            if not self._write_entity(source):
+                self._failed_sources.append(source)
 
     def _write_spaces(self) -> None:
         self._logger.new_process_status(len(self._env_def.spaces), 'Pushing Spaces. ')
         for space in self._env_def.spaces:
             self._logger.print_process_status(increment=1)
-            self._write_entity(space)
+            if not self._write_entity(space):
+                self._failed_spaces.append(space)
 
     def _write_space_folders(self) -> None:
         self._logger.new_process_status(len(self._env_def.folders), 'Pushing Space Folders. ')
@@ -124,7 +144,8 @@ class EnvWriter:
             # Drop ACL for HOME folders
             if folder['path'][0][:1] == '@':
                 Utils.pop_it(folder, ["accessControlList"])
-            self._write_entity(folder)
+            if not self._write_entity(folder):
+                self._failed_folders.append(folder)
 
     # Process vds_list and save ordered list of VDSs into _vds_hierarchy. Recursive method.
     def _order_vds(self, processing_level=0):
@@ -234,6 +255,7 @@ class EnvWriter:
             reflected_dataset = self._env_api.get_catalog_by_path(Utils.get_str_path(reflection_path))
             if reflected_dataset is None:
                 self._logger.error("Could not resolve reflected dataset for reflection: ", reflection)
+                self._failed_reflections.append(reflection)
                 continue
             reflection['datasetId'] = reflected_dataset['id']
             # Check if the reflection already exists
@@ -242,6 +264,7 @@ class EnvWriter:
                 new_reflection = self._env_api.create_reflection(reflection)
                 if new_reflection is None:
                     self._logger.error("Could not create reflection ", reflection)
+                    self._failed_reflections.append(reflection)
                     continue
             else:
                 # Ensure there are changes to update as it will invalidate existing reflection data
@@ -251,6 +274,7 @@ class EnvWriter:
                 updated_reflection = self._env_api.update_reflection(existing_reflection['id'], reflection)
                 if updated_reflection is None:
                     self._logger.error("Error updating reflection ", reflection)
+                    self._failed_reflections.append(reflection)
                     continue
 
     def _is_reflection_equal(self, existing_reflection: dict, reflection: dict) -> bool:
@@ -342,6 +366,7 @@ class EnvWriter:
             existing_wiki_entity = self._env_api.get_catalog_by_path(Utils.get_str_path(wiki_path))
             if existing_wiki_entity is None:
                 self._logger.error("Unable to resolve wiki's dataset for ", wiki)
+                self._failed_wiki.append(wiki)
                 continue
             existing_wiki = self._env_api.get_catalog_wiki(existing_wiki_entity['id'])
             if existing_wiki is None:  # Need to create new entity
@@ -349,6 +374,7 @@ class EnvWriter:
                 new_wiki = self._env_api.update_wiki(existing_wiki_entity['id'], new_wiki)
                 if new_wiki is None:
                     self._logger.error("Could not create wiki ", wiki)
+                    self._failed_wiki.append(wiki)
                     continue
             else:  # Wiki already exists in the target environment
                 if wiki_text == existing_wiki['text']:
@@ -357,6 +383,7 @@ class EnvWriter:
                 updated_wiki = self._env_api.update_wiki(existing_wiki_entity['id'], existing_wiki)
                 if updated_wiki is None:
                     self._logger.error("Error updating wiki ", wiki)
+                    self._failed_wiki.append(wiki)
                     continue
 
     def _write_tags(self) -> None:
@@ -367,6 +394,7 @@ class EnvWriter:
             existing_tags_entity = self._env_api.get_catalog_by_path(Utils.get_str_path(tags_path))
             if existing_tags_entity is None:
                 self._logger.error("Unable to resolve dataset for tags ", tags)
+                self._failed_tags.append(tags)
                 continue
             existing_tags = self._env_api.get_catalog_tags(existing_tags_entity['id'])
             if existing_tags is None:
@@ -374,6 +402,7 @@ class EnvWriter:
                 new_tags = self._env_api.update_tag(existing_tags_entity['id'], new_tags)
                 if new_tags is None:
                     self._logger.error("Could not create tags ", tags)
+                    self._failed_tags.append(tags)
                     continue
             else:
                 if new_tags == existing_tags['tags']:
@@ -382,6 +411,7 @@ class EnvWriter:
                 updated_tags = self._env_api.update_tag(existing_tags_entity['id'], existing_tags)
                 if updated_tags is None:
                     self._logger.error("Error updating tags ", tags)
+                    self._failed_tags.append(tags)
                     continue
 
     def _get_vds_dependency_paths(self, vds):

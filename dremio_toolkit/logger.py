@@ -118,16 +118,16 @@ class Logger:
         return self._error_count
 
     # Enrich message with either catalog ID or entire catalog JSON depending on verbose setting
-    def _enrich_message(self, message: str, catalog: str = None) -> str:
-        if catalog is None:
+    def _enrich_message(self, message: str, catalog: dict = None) -> str:
+        if catalog is None or type(catalog) != dict:
             return message
         if self._verbose:
             return message + " " + str(catalog)
-        if 'path' in catalog:
+        if 'param' in catalog:
             if 'entityType' in catalog:
-                return message + " " + str(catalog['entityType']) + ":" + Utils.get_str_path(catalog['path'])
+                return message + " " + str(catalog['entityType']) + ":" + Utils.get_str_path(catalog['param'])
             else:
-                return message + " " + Utils.get_str_path(catalog['path'])
+                return message + " " + Utils.get_str_path(catalog['param'])
         if 'entityType' in catalog:
             if 'name' in catalog:
                 return message + " " + str(catalog['entityType']) + ":" + str(catalog['name'])

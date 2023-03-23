@@ -10,12 +10,11 @@ Dremio Toolkit uses Dremio API’s only and can be run without impact on Dremio 
 
 Dremio Toolkit supports only Dremio Enterprise software. It does not support Community Edition.
 
-All Dremio Toolkit commands exit with:
-- 0 if no error has been encountered, 
-- 1 for a fatal error, and 
-- 2 if only non-fatal errors have been encountered.
-<br><br>
-Please note that some errors may be absolutely fine depending on the state of the environment. For example, a Data Source maybe not available at the time of running the script which is probably normal for a development environment.
+#### All Dremio Toolkit commands exit with these OS codes:
+    0 if no error has been encountered, 
+    1 for a fatal error, and 
+    2 if only non-fatal errors have been encountered.
+Note that some errors may be absolutely fine depending on the state of the environment. For example, a Data Source maybe not available at the time of running the script which is probably normal for a development environment.
 
 ## create_snapshot
 
@@ -85,3 +84,22 @@ PYTHONPATH=./ python dremio_toolkit/diff_snapshot.py -b <BASE_JSON_FILE> -c <COM
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -v or --verbose : Set Log to verbose to print object definitions instead of object IDs.
     -f or --log-filename : Set Log to write to a specified file instead of STDOUT.
+
+## exec_sql
+
+This  command executes SQL code from a specified file. The file can contain a number of SQL commands which can be separated with ";". 
+
+### Syntax
+```commandline
+PYTHONPATH=./ python dremio_toolkit/exec_sql.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -s <SQL_FILE> -r <REPORT_FILE>
+```
+ 
+### Arguments
+
+    -d or --dremio-environment-url : URL to Dremio environment.
+    -u or --user : User name. User must be a Dremio admin.
+    -p or --password : User password.
+    -s or --sql-filename : File with SQL code to execute.
+    -r or --report-filename : File name for the JSON report.
+    -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
+    -f or --log-filename : Set Log to write to a specified file instead of STDOUT."

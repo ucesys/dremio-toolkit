@@ -96,7 +96,7 @@ class EnvReader:
 			# Report on failed VDS Graph
 			for vds in self._failed_vds_graphs:
 				f.write('Unable to retrieve Graph' + delimiter + 'VDS' + delimiter + '' + delimiter + '' +
-						delimiter + str(vds['path']) + delimiter + "" + '\n')
+						delimiter + str(vds['param']) + delimiter + "" + '\n')
 
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,
@@ -194,9 +194,9 @@ class EnvReader:
 		for reflection in reflections:
 			reflection_dataset = self._env_api.get_catalog(reflection['datasetId'])
 			if reflection_dataset is None:
-				self._logger.error("Error processing reflection, cannot get path for dataset_container: " + reflection['datasetId'])
+				self._logger.error("Error processing reflection, cannot get param for dataset_container: " + reflection['datasetId'])
 				continue
-			reflection["path"] = reflection_dataset['path']
+			reflection["param"] = reflection_dataset['param']
 			if reflection not in self._env_def.reflections:
 				self._env_def.reflections.append(reflection)
 
@@ -207,9 +207,9 @@ class EnvReader:
 		if tags is not None:
 			tags['entity_id'] = entity['id']
 			if entity['entityType'] == 'space' or entity['entityType'] == 'source':
-				tags['path'] = [entity['name']]
+				tags['param'] = [entity['name']]
 			else:
-				tags['path'] = entity['path']
+				tags['param'] = entity['param']
 			if tags not in self._env_def.tags:
 				self._env_def.tags.append(tags)
 
@@ -220,9 +220,9 @@ class EnvReader:
 		if wiki is not None:
 			wiki["entity_id"] = entity['id']
 			if entity['entityType'] == 'space' or entity['entityType'] == 'source' or entity['entityType'] == 'home':
-				wiki['path'] = [entity['name']]
+				wiki['param'] = [entity['name']]
 			else:
-				wiki['path'] = entity['path']
+				wiki['param'] = entity['param']
 			if wiki not in self._env_def.wikis:
 				self._env_def.wikis.append(wiki)
 
@@ -292,8 +292,8 @@ class EnvReader:
 		if graph is not None:
 			vds_parent_list = []
 			for parent in graph['parents']:
-				vds_parent_list.append(Utils.get_str_path(parent['path']))
-			vds_parent_json = {'id': vds['id'], 'path': vds['path'], 'parents': vds_parent_list}
+				vds_parent_list.append(Utils.get_str_path(parent['param']))
+			vds_parent_json = {'id': vds['id'], 'param': vds['param'], 'parents': vds_parent_list}
 			self._env_def.vds_parents.append(vds_parent_json)
 		else:
 			self._failed_vds_graphs.append(vds)

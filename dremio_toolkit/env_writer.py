@@ -81,10 +81,10 @@ class EnvWriter:
                     delimiter + "NOTES" + "\n")
             for vds in self._env_def.vds_list:
                 f.write('Unable to push' + delimiter + 'VDS' + delimiter + (vds['id'] if 'id' in vds else '') +
-                        delimiter + str(vds['path']) + delimiter + '' + '\n')
+                        delimiter + str(vds['param']) + delimiter + '' + '\n')
             for vds in self._vds_hierarchy:
                 f.write('Unable to push' + delimiter + 'VDS' + delimiter + (vds[1]['id'] if 'id' in vds[1] else '') +
-                        delimiter + str(vds[1]['path']) + delimiter + 'Hierarchy Level: ' + str(vds[0]) + '\n')
+                        delimiter + str(vds[1]['param']) + delimiter + 'Hierarchy Level: ' + str(vds[0]) + '\n')
             for source in self._failed_sources:
                 f.write('Unable to push' + delimiter + 'SOURCE' + delimiter + (source['id'] if 'id' in source else '') +
                         delimiter + source['name'] + delimiter + '' + '\n')
@@ -93,13 +93,13 @@ class EnvWriter:
                         delimiter + space['name'] + delimiter + '' + '\n')
             for folder in self._failed_folders:
                 f.write('Unable to push' + delimiter + 'FOLDER' + delimiter + (folder['id'] if 'id' in folder else '') +
-                        delimiter + str(folder['path']) + delimiter + '' + '\n')
+                        delimiter + str(folder['param']) + delimiter + '' + '\n')
             for wiki in self._failed_wiki:
                 f.write('Unable to push' + delimiter + 'WIKI' + delimiter + (wiki['id'] if 'id' in wiki else '') +
-                        delimiter + str(wiki['path']) + delimiter + '' + '\n')
+                        delimiter + str(wiki['param']) + delimiter + '' + '\n')
             for tags in self._failed_tags:
                 f.write('Unable to push' + delimiter + 'TAGS' + delimiter + (tags['id'] if 'id' in tags else '') +
-                        delimiter + str(tags['path']) + delimiter + '' + '\n')
+                        delimiter + str(tags['param']) + delimiter + '' + '\n')
 
     def _retrieve_referenced_acl_principals(self) -> None:
         self._logger.new_process_status(3, 'Retrieving ACL Users. ')
@@ -148,7 +148,7 @@ class EnvWriter:
         for folder in self._env_def.folders:
             self._logger.print_process_status(increment=1)
             # Drop ACL for HOME folders
-            if folder['path'][0][:1] == '@':
+            if folder['param'][0][:1] == '@':
                 Utils.pop_it(folder, ["accessControlList"])
             if not self._write_entity(folder):
                 self._failed_folders.append(folder)
@@ -257,7 +257,7 @@ class EnvWriter:
             entity['id'] = existing_entity['id']
             entity['tag'] = existing_entity['tag']
             # Update ACL version for proper concurrency control
-            if ('path' in entity and entity['path'][0][:1] == '@') or ('name' in entity and entity['name'][:1] == '@'):
+            if ('param' in entity and entity['param'][0][:1] == '@') or ('name' in entity and entity['name'][:1] == '@'):
                 Utils.pop_it(entity, 'accessControlList')
             else:
                 if 'accessControlList' in existing_entity and 'version' in existing_entity['accessControlList']:
@@ -271,8 +271,8 @@ class EnvWriter:
 
     def _write_reflections(self) -> None:
         for reflection in self._env_def.reflections:
-            reflection_path = reflection['path']
-            Utils.pop_it(reflection, ['id', 'tag', 'createdAt', 'updatedAt', 'currentSizeBytes', 'totalSizeBytes', 'status', 'canView', 'canAlter', 'path'])
+            reflection_path = reflection['param']
+            Utils.pop_it(reflection, ['id', 'tag', 'createdAt', 'updatedAt', 'currentSizeBytes', 'totalSizeBytes', 'status', 'canView', 'canAlter', 'param'])
             reflected_dataset = self._env_api.get_catalog_by_path(Utils.get_str_path(reflection_path))
             if reflected_dataset is None:
                 self._logger.error("Could not resolve reflected dataset for reflection: ", reflection)
@@ -314,7 +314,7 @@ class EnvWriter:
         for existing_reflection in self._existing_reflections:
             if reflection['name'] == existing_reflection['name']:
                 existing_dataset = self._env_api.get_catalog(existing_reflection['datasetId'])
-                if existing_dataset is not None and existing_dataset['path'] == dataset['path']:
+                if existing_dataset is not None and existing_dataset['param'] == dataset['param']:
                     return existing_reflection
         return None
 
@@ -373,8 +373,8 @@ class EnvWriter:
     def _get_existing_entity(self, entity: dict) -> dict:
         if 'name' in entity:
             return self._env_api.get_catalog_by_path(entity['name'])
-        elif 'path' in entity:
-            return self._env_api.get_catalog_by_path(Utils.get_str_path(entity['path']))
+        elif 'param' in entity:
+            return self._env_api.get_catalog_by_path(Utils.get_str_path(entity['param']))
         else:
             self._logger.error("Unable to find entity in the target Dremio environment: " + entity)
             return None
@@ -382,7 +382,7 @@ class EnvWriter:
     def _write_wiki(self) -> None:
         for wiki in self._env_def.wikis:
             wiki_text = wiki['text']
-            wiki_path = wiki['path']
+            wiki_path = wiki['param']
             # Check if the wiki already exists
             existing_wiki_entity = self._env_api.get_catalog_by_path(Utils.get_str_path(wiki_path))
             if existing_wiki_entity is None:
@@ -410,7 +410,7 @@ class EnvWriter:
     def _write_tags(self) -> None:
         for tags in self._env_def.tags:
             new_tags = tags['tags']
-            tags_path = tags['path']
+            tags_path = tags['param']
             # Check if the tags already exist
             existing_tags_entity = self._env_api.get_catalog_by_path(Utils.get_str_path(tags_path))
             if existing_tags_entity is None:
@@ -437,16 +437,16 @@ class EnvWriter:
 
     def _get_vds_dependency_paths(self, vds):
         for vds_entry in self._env_def.vds_parents:
-            if vds_entry['path'] == vds['path']:
+            if vds_entry['param'] == vds['param']:
                 return vds_entry['parents']
 
     def _find_vds_by_path(self, path):
         # First, try finding in the VDS list from the source file
         for vds in self._env_def.vds_list:
-            if path == Utils.get_str_path(vds['path']):
+            if path == Utils.get_str_path(vds['param']):
                 return vds
         for vds_hierarchy in self._vds_hierarchy:
-            if path == Utils.get_str_path(vds_hierarchy[1]['path']):
+            if path == Utils.get_str_path(vds_hierarchy[1]['param']):
                 return vds_hierarchy[1]
         return None
 

@@ -41,7 +41,7 @@ class Utils:
         if item_object not in list_object:
             list_object.append(item_object)
 
-    # Convert List path to a String if required
+    # Convert List param to a String if required
     @staticmethod
     def get_str_path(path):
         # Only normalize lists, do not modify strings

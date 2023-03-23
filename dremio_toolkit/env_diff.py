@@ -100,7 +100,7 @@ class EnvDiff:
             json.dump(diff_json, f, indent=4, sort_keys=True)
 
     def _diff_containers(self) -> None:
-        self._diff_lists(self._base_def.containers, self._comp_def.containers, 'path', ['containerType'], self.diff_containers)
+        self._diff_lists(self._base_def.containers, self._comp_def.containers, 'param', ['containerType'], self.diff_containers)
 
     def _diff_sources(self) -> None:
         fields = ['accelerationGracePeriodMs', 'accelerationNeverExpire', 'accelerationNeverRefresh',
@@ -115,17 +115,17 @@ class EnvDiff:
 
     def _diff_folders(self) -> None:
         fields = ['entityType', 'accessControlList', 'owner']
-        self._diff_lists(self._base_def.folders, self._comp_def.folders, 'path', fields, self.diff_folders)
+        self._diff_lists(self._base_def.folders, self._comp_def.folders, 'param', fields, self.diff_folders)
 
     def _diff_vds(self) -> None:
         fields = ['entityType', 'accessControlList', 'owner', 'fields', 'sql', 'sqlContext', 'type']
-        self._diff_lists(self._base_def.vds_list, self._comp_def.vds_list, 'path', fields, self.diff_vds)
+        self._diff_lists(self._base_def.vds_list, self._comp_def.vds_list, 'param', fields, self.diff_vds)
 
     def _diff_reflections(self) -> None:
         fields = ['arrowCachingEnabled', 'canAlter', 'canView', 'enabled', 'entityType', 'name',
                   'partitionDistributionStrategy', 'type',
                   {'status': ['availability', 'combinedStatus', 'config', 'refresh']}]
-        self._diff_lists(self._base_def.reflections, self._comp_def.reflections, 'path', fields, self.diff_reflections)
+        self._diff_lists(self._base_def.reflections, self._comp_def.reflections, 'param', fields, self.diff_reflections)
 
     def _diff_rules(self) -> None:
         fields = ['acceptName', 'action', 'conditions']
@@ -137,11 +137,11 @@ class EnvDiff:
 
     def _diff_tags(self) -> None:
         fields = ['tags']
-        self._diff_lists(self._base_def.tags, self._comp_def.tags, 'path', fields, self.diff_tags)
+        self._diff_lists(self._base_def.tags, self._comp_def.tags, 'param', fields, self.diff_tags)
 
     def _diff_wikis(self) -> None:
         fields = ['text']
-        self._diff_lists(self._base_def.wikis, self._comp_def.wikis, 'path', fields, self.diff_wikis)
+        self._diff_lists(self._base_def.wikis, self._comp_def.wikis, 'param', fields, self.diff_wikis)
 
     def _diff_lists(self, base_list: list, comp_list: list, uid, fields: [], report_list: list) -> None:
         for base_item in base_list:

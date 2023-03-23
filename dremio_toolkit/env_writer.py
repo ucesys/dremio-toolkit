@@ -213,8 +213,7 @@ class EnvWriter:
 
     def _write_vds(self) -> None:
         self._logger.new_process_status(len(self._vds_hierarchy), 'Pushing VDS Hierarchy. ')
-        # Iterate through VDS until all VDS have been successfully pushed to the target environment or
-        # no VDS has been successfully pushed during the last iteration
+        # First push all VDS that have been ordered into a hierarchy
         for level in range(0, 10, 1):
             for i in range(len(self._vds_hierarchy)-1, -1, -1):
                 if level == self._vds_hierarchy[i][0]:
@@ -222,12 +221,26 @@ class EnvWriter:
                     if self._write_entity(vds):
                         self._vds_hierarchy.pop(i)
                     self._logger.print_process_status(increment=1)
+        # Iterate through the rest of VDS until all VDS have been successfully pushed to the target environment or
+        # no VDS has been successfully pushed during the last iteration
+        self._logger.new_process_status(len(self._vds_hierarchy), 'Pushing Unordered VDS. ')
+        while self._env_def.vds_list:
+            self._logger.print_process_status(increment=1)
+            vds_updated = False
+            for i in range(len(self._env_def.vds_list) - 1, -1, -1):
+                vds = self._env_def.vds_list[i]
+                if self._write_entity(vds):
+                    self._env_def.vds_list.pop(i)
+                    vds_updated = True
+            if not vds_updated:
+                break
+        # Report on errors
         if self._vds_hierarchy:
             self._logger.error("Unable to push " + str(len(self._vds_hierarchy)) +
                                " VDSs from processed hierarchy. See exception report for details.")
         if self._env_def.vds_list:
-            self._logger.error("Unable to process hierarchy for " + str(len(self._env_def.vds_list)) +
-                               " VDSs. See exception report for details.")
+            self._logger.error("Unable to push " + str(len(self._env_def.vds_list)) +
+                               " un-ordered VDSs. See exception report for details.")
 
     def _write_entity(self, entity: dict) -> bool:
         # Prepare JSON object for saving to target Dremio environment

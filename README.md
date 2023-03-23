@@ -11,9 +11,9 @@ Dremio Toolkit uses Dremio API’s only and can be run without impact on Dremio 
 Dremio Toolkit supports only Dremio Enterprise software. It does not support Community Edition.
 
 All Dremio Toolkit commands exit with:
-<li>0 if no error has been encountered, 
-<li>1 for a fatal error, and 
-<li>2 if only non-fatal errors have been encountered.
+- 0 if no error has been encountered, 
+- 1 for a fatal error, and 
+- 2 if only non-fatal errors have been encountered.
 <br><br>
 Please note that some errors may be absolutely fine depending on the state of the environment. For example, a Data Source maybe not available at the time of running the script which is probably normal for a development environment.
 

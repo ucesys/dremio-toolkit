@@ -10,6 +10,13 @@ Dremio Toolkit uses Dremio API’s only and can be run without impact on Dremio 
 
 Dremio Toolkit supports only Dremio Enterprise software. It does not support Community Edition.
 
+All Dremio Toolkit commands exit with:
+<li>0 if no error has been encountered, 
+<li>1 for a fatal error, and 
+<li>2 if only non-fatal errors have been encountered.
+<br><br>
+Please note that some errors may be absolutely fine depending on the state of the environment. For example, a Data Source maybe not available at the time of running the script which is probably normal for a development environment.
+
 ## create_snapshot
 
 Dremio provides a backup utility out of the box. 
@@ -22,7 +29,7 @@ We recommend to take a snapshot of the Development environment on a daily basis.
 
 ### Syntax
 ```commandline
-PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -o <OUTPUT_FILE> -r <REPORT_JSON_FILE>
+PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -o <OUTPUT_FILE> -r <REPORT_FILE>
 ```
 
 ### Arguments
@@ -30,7 +37,7 @@ PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_
     -u or --user : Dremio user name. User must be a Dremio admin.
     -p or --password : Dremio user password.
     -o or --output-filename : Json file name to save Dremio environment.
-    -r or --report-filename : CSV file name for the exception report.
+    -r or --report-filename : File name for the tab delimited exception report report.
     -e or --report-delimiter : Delimiter to use in the exception report. Default is tab.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -v or --verbose : Set Log to verbose to print object definitions instead of object IDs.
@@ -44,7 +51,7 @@ This simple command reads json file produced by <b>create_snapshot</b> command a
 
 ### Syntax
 ```commandline
-PYTHONPATH=./ python dremio_toolkit/push_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -i <INPUT_FILE>
+PYTHONPATH=./ python dremio_toolkit/push_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -i <INPUT_FILE> -r <REPORT_FILE>
 ```
 
 ### Arguments
@@ -53,7 +60,7 @@ PYTHONPATH=./ python dremio_toolkit/push_snapshot.py -d <DREMIO_HOST>:<DREMIO_PO
     -p or --password : User password.
     -i or --input-filename : Json file name with snapshot of Dremio environment.
     -y or --dry-run : Whether it's a dry run or changes should be made to the target.
-    -r or --report-filename : CSV file name for the exception' report.
+    -r or --report-filename : File name for the tab delimited exception' report.
     -e or --report-delimiter : Delimiter to use in the exception report. Default is tab.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -v or --verbose : Set Log to verbose to print object definitions instead of object IDs.
@@ -74,7 +81,7 @@ PYTHONPATH=./ python dremio_toolkit/diff_snapshot.py -b <BASE_JSON_FILE> -c <COM
 
     -b or --base-filename : Json file name with snapshot of the 'base' Dremio environment.
     -c or --comp-filename : Json file name with snapshot of the 'comp' Dremio environment.
-    -r or --report-filename : Json file name for the 'diff' report.
+    -r or --report-filename : File name for the JSON 'diff' report.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -v or --verbose : Set Log to verbose to print object definitions instead of object IDs.
     -f or --log-filename : Set Log to write to a specified file instead of STDOUT.

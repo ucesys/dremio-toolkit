@@ -82,19 +82,21 @@ class EnvReader:
 		if os.path.isfile(report_file):
 			os.remove(report_file)
 		with open(report_file, "w", encoding="utf-8") as f:
-			f.write("OWNER_USER_NAME" + delimiter + "VIEW_NAME" + delimiter + "PATH" + delimiter + "NOTES\n")
+			f.write("ERROR" + delimiter + "OBJECT TYPE" + delimiter + "OWNER_USER_NAME" + delimiter + "VIEW_NAME" +
+					delimiter + "PATH" + delimiter + "NOTES\n")
 			# Page through the results, 100 rows per page
 			limit = 100
 			for i in range(0, int(num_rows / limit) + 1):
 				job_result = self._env_api.get_job_result(jobid, limit * i, limit)
 				if job_result is not None:
 					for row in job_result['rows']:
-						f.write(row['OWNER_USER_NAME'] + delimiter + row['VIEW_NAME'] + delimiter +
-								row['PATH'] + delimiter + "SQL_CONTEXT:" + row['SQL_CONTEXT'] + '\n')
+						f.write('Unable to retrieve VDS' + delimiter + 'VDS' + delimiter +
+								row['OWNER_USER_NAME'] + delimiter + row['VIEW_NAME'] + delimiter +
+								row['PATH'] + delimiter + 'SQL_CONTEXT:' + row['SQL_CONTEXT'] + '\n')
 			# Report on failed VDS Graph
 			for vds in self._failed_vds_graphs:
-				f.write('' + delimiter + vds['name'] + delimiter + vds['path'] +
-						delimiter + "Unable to retrieve Graph." + '\n')
+				f.write('Unable to retrieve Graph' + delimiter + 'VDS' + delimiter + '' + delimiter + '' +
+						delimiter + str(vds['path']) + delimiter + "" + '\n')
 
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,

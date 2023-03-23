@@ -28,7 +28,7 @@ def test_read_dremio_environment():
     env_reader = EnvReader(env_api, logger)
     expected_env_def = mock_env_definition()
 
-    env_def = env_reader.read_dremio_environment('exceptions.csv', '\t')
+    env_def = env_reader.read_dremio_environment()
 
     assert env_def.containers == expected_env_def.containers
     assert env_def.homes == expected_env_def.homes

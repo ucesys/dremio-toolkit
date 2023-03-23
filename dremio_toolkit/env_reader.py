@@ -38,6 +38,7 @@ class EnvReader:
 	_env_api = None
 	_logger = None
 	_env_def = EnvDefinition()
+	_failed_vds_graphs = []
 
 	def __init__(self, env_api: EnvApi, logger: Logger):
 		self._env_api = env_api
@@ -57,7 +58,6 @@ class EnvReader:
 
 	def write_exception_report(self, report_file: str, delimiter: str = '\t') -> None:
 		if report_file is None:
-			self._logger.warn("Exception report file name has not been supplied with report-filename argument. Report file will not be produced.")
 			return
 		self._logger.new_process_status(100, 'Reporting Exceptions.')
 		sql = "SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT " \
@@ -91,6 +91,10 @@ class EnvReader:
 					for row in job_result['rows']:
 						f.write(row['OWNER_USER_NAME'] + delimiter + row['VIEW_NAME'] + delimiter +
 								row['PATH'] + delimiter + "SQL_CONTEXT:" + row['SQL_CONTEXT'] + '\n')
+			# Report on failed VDS Graph
+			for vds in self._failed_vds_graphs:
+				f.write('' + delimiter + vds['name'] + delimiter + vds['path'] +
+						delimiter + "Unable to retrieve Graph." + '\n')
 
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,
@@ -289,3 +293,5 @@ class EnvReader:
 				vds_parent_list.append(Utils.get_str_path(parent['path']))
 			vds_parent_json = {'id': vds['id'], 'path': vds['path'], 'parents': vds_parent_list}
 			self._env_def.vds_parents.append(vds_parent_json)
+		else:
+			self._failed_vds_graphs.append(vds)

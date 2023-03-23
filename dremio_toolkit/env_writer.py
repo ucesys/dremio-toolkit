@@ -72,8 +72,6 @@ class EnvWriter:
 
     def write_exception_report(self, report_file: str, delimiter: str = '\t') -> None:
         if report_file is None:
-            self._logger.warn(
-                "Exception report file name has not been supplied with report-filename argument. Report file will not be produced.")
             return
         # Prep report file
         if os.path.isfile(report_file):

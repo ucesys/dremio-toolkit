@@ -86,7 +86,7 @@ class EnvApi:
 
     # Generate an authentication token and save it
     # https://docs.dremio.com/software/rest-api/#authentication
-    def _authenticate(self) -> None:
+    def _authenticate(self, admin=True) -> None:
         headers = {"Content-Type": "application/json"}
         payload = '{"userName": "' + self._username + '","password": "' + self._password + '"}'
         payload = payload.encode(encoding='utf-8')
@@ -96,6 +96,14 @@ class EnvApi:
             self._logger.fatal("Authentication Error " + str(response.status_code))
         self._token = '_dremio' + response.json()['token']
         self._headers = {"Content-Type": "application/json", "Authorization": self._token}
+        # User must be an Admin for most of the dremio-toolkit operations
+        if admin:
+            user = self.get_user_by_name(self._username)
+            user = self.get_user(user['id'])
+            for role in user['roles']:
+                if role['name'] == 'ADMIN':
+                    return
+            self._logger.fatal("Dremio user is not in ADMIN role.")
 
     # Lists all top-level catalog containers.
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog/

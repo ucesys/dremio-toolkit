@@ -17,7 +17,7 @@
 #########################################################################
 
 import argparse
-
+from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_diff import EnvDiff
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
@@ -53,7 +53,7 @@ def diff_snapshot(base_filename, comp_filename, report_filename, log_level, log_
     # Return process status to the OS
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
-        exit(1)
+        exit(Utils.NON_FATAL_EXIT_CODE)
 
 
 if __name__ == '__main__':

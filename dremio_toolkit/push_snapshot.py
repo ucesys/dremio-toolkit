@@ -17,6 +17,7 @@
 #########################################################################
 
 import argparse
+from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_api import EnvApi
 from dremio_toolkit.env_writer import EnvWriter
 from dremio_toolkit.logger import Logger
@@ -44,6 +45,8 @@ def parse_args():
     arg_parser.add_argument("-f", "--log-filename", help="Set Log to write to a specified file instead of STDOUT.",
                             required=False)
     parsed_args = arg_parser.parse_args()
+    if parsed_args.report_filename is None:
+        print("Exception report file name has not been supplied with report-filename argument. Report file will not be produced.")
     return parsed_args
 
 
@@ -61,7 +64,7 @@ def push_snapshot(input_filename, dremio_environment_url, user, password, dry_ru
     # Return process status to the OS
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
-        exit(1)
+        exit(Utils.NON_FATAL_EXIT_CODE)
 
 
 if __name__ == '__main__':

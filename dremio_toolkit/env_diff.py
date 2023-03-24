@@ -68,6 +68,7 @@ class EnvDiff:
         self._diff_wikis()
 
     def write_diff_report(self, filename: str) -> None:
+        print('Writing diff report, might take a min ...')
         if os.path.isfile(filename):
             os.remove(filename)
         diff_json = {
@@ -144,7 +145,7 @@ class EnvDiff:
                          self.diff_wikis, 'Wikis')
 
     def _diff_lists(self, base_list: list, comp_list: list, uid: str, fields: [], report_list: list, msg: str) -> None:
-        self._logger.new_process_status(len(base_list), 'Comparing snapshots for ' + msg + '. ')
+        self._logger.new_process_status(len(base_list) + len(comp_list), 'Comparing snapshots for ' + msg + '. ')
         for base_item in base_list:
             self._logger.print_process_status(increment=1)
             match_found = False
@@ -164,6 +165,7 @@ class EnvDiff:
             if not match_found:
                 self._report_diff(report_list, base_item, diff='Item is missing in Comp Environment')
         for comp_item in comp_list:
+            self._logger.print_process_status(increment=1)
             match_found = False
             for base_item in base_list:
                 diff, explanation = self._diff_item(base_item, comp_item, uid, fields)

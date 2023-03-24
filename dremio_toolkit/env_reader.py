@@ -60,9 +60,9 @@ class EnvReader:
 		if report_file is None:
 			return
 		self._logger.new_process_status(100, 'Reporting Exceptions.')
-		sql = "SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT " \
-			  "FROM SYS.\\\"VIEWS\\\" V " \
-			  "JOIN SYS.\\\"USERS\\\" U ON V.OWNER_ID = U.USER_ID " \
+		sql = 'SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT ' \
+			  'FROM SYS."VIEWS" V ' \
+			  'JOIN SYS."USERS" U ON V.OWNER_ID = U.USER_ID ' \
 			  "WHERE POSITION('@' IN PATH)=2 OR POSITION('@' IN SQL_CONTEXT)=1 "
 		jobid = self._env_api.submit_sql(sql)
 		# Wait for the job to complete. Should only take a moment

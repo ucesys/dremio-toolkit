@@ -40,6 +40,8 @@ def parse_args():
     arg_parser.add_argument("-f", "--log-filename", help="Set Log to write to a specified file instead of STDOUT.",
                             required=False)
     parsed_args = arg_parser.parse_args()
+    if parsed_args.report_filename is None:
+        print("report-filename argument has not been specified. Exception report will not be produced.")
     return parsed_args
 
 
@@ -57,10 +59,11 @@ def exec_sql(dremio_environment_url, user, password, sql_filename, report_filena
             sql_statuses.append({'sql': sql, 'jobid': jobid, 'job_result': job_result})
         logger.print_process_status(increment=1)
     # Produce execution report
-    if os.path.isfile(report_filename):
-        os.remove(report_filename)
-    with open(report_filename, "w", encoding="utf-8") as f:
-        json.dump(sql_statuses, f, indent=4, sort_keys=True)
+    if report_filename:
+        if os.path.isfile(report_filename):
+            os.remove(report_filename)
+        with open(report_filename, "w", encoding="utf-8") as f:
+            json.dump(sql_statuses, f, indent=4, sort_keys=True)
 
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:

@@ -43,7 +43,7 @@ def parse_args():
                             required=False)
     parsed_args = arg_parser.parse_args()
     if parsed_args.report_filename is None:
-        print("report-file argument has not been specified. Exception report will not be produced.")
+        print("report-filename argument has not been specified. Exception report will not be produced.")
     return parsed_args
 
 

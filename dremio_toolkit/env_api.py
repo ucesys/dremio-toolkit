@@ -21,7 +21,6 @@ import requests
 import sys
 import urllib
 import time
-import time
 
 
 ###
@@ -37,7 +36,7 @@ class EnvApi:
     _api_v3 = 'api/v3'
     _catalog = _api_v3 + '/catalog/'
     _reflection = _api_v3 + '/reflection/'
-    _catalog_by_path = _api_v3 + '/catalog/by-param/'
+    _catalog_by_path = _api_v3 + '/catalog/by-path/'
     _wlm_queue = _api_v3 + "/wlm/queue/"
     _wlm_rule = _api_v3 + "/wlm/rule"
     _vote = _api_v3 + "/vote"
@@ -113,7 +112,7 @@ class EnvApi:
     def list_catalogs(self):
         return self._http_get(self._catalog)
 
-    # Returns a CatalogEntity by its param
+    # Returns a CatalogEntity by its path
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog-path/
     def get_catalog_by_path(self, path):
         if path[0] == '/':
@@ -125,7 +124,7 @@ class EnvApi:
     # Returns a CatalogEntity by its ID
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog-id/
     def get_catalog(self, catalog_id):
-        # catalogId can be an actual Dremio UID or a param prefixed with 'dremio:'
+        # catalogId can be an actual Dremio UID or a path prefixed with 'dremio:'
         if catalog_id[:7] == 'dremio:':
             return self.get_catalog_by_path(catalog_id[8:])
         else:
@@ -244,11 +243,11 @@ class EnvApi:
         else:
             return self._http_post(self._catalog + pds_id + "/" + self._refresh_postfix)
 
-    # Refreshes all reflections dependent on a PDS specified by param
+    # Refreshes all reflections dependent on a PDS specified by path
     def refresh_reflections_by_pds_path(self, pds_path):
         pds = self.get_catalog_by_path(pds_path)
         if pds is None:
-            self._logger.error("Could not locate PDS for param: " + str(pds_path))
+            self._logger.error("Could not locate PDS for path: " + str(pds_path))
             return None
         if self._dry_run:
             self._logger.warning("Dry Run: not refreshing reflections by PDS PATH.")
@@ -456,7 +455,7 @@ class EnvApi:
                 self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
                                    " for : <" + str(url) + ">" + self._get_error_message(response))
                 raise RuntimeError(self._get_error_message(response))
-            elif response.status_code == 409:  # A catalog catalog with the specified param already exists.
+            elif response.status_code == 409:  # A catalog catalog with the specified path already exists.
                 self._logger.error("Received HTTP Response Code 409 for : <" + str(url) + ">" +
                                    self._get_error_message(response))
             elif response.status_code == 404:  # Not found
@@ -495,7 +494,7 @@ class EnvApi:
                 self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
                                    " for : <" + str(url) + ">" + self._get_error_message(response))
                 raise RuntimeError(self._get_error_message(response))
-            elif response.status_code == 409:  # A catalog catalog with the specified param already exists.
+            elif response.status_code == 409:  # A catalog catalog with the specified path already exists.
                 self._logger.error("Received HTTP Response Code 409 for : <" + str(url) + ">" +
                                    self._get_error_message(response))
             elif response.status_code == 404:  # Not found
@@ -523,9 +522,9 @@ class EnvApi:
             message = message + " content: " + str(response.content)
         return message
 
-    def _encode_http_param(self, param):
+    def _encode_http_param(self, path):
         if sys.version_info.major > 2:
             # handle spaces in non-promoted source or folder paths (want %20 for Dremio URLs rather than +)
-            return urllib.parse.quote_plus(urllib.parse.quote(param), safe='%')
+            return urllib.parse.quote_plus(urllib.parse.quote(path), safe='%')
         else:
-            return urllib.quote_plus(param)
+            return urllib.quote_plus(path)

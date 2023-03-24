@@ -123,11 +123,11 @@ class Logger:
             return message
         if self._verbose:
             return message + " " + str(catalog)
-        if 'param' in catalog:
+        if 'path' in catalog:
             if 'entityType' in catalog:
-                return message + " " + str(catalog['entityType']) + ":" + Utils.get_str_path(catalog['param'])
+                return message + " " + str(catalog['entityType']) + ":" + Utils.get_str_path(catalog['path'])
             else:
-                return message + " " + Utils.get_str_path(catalog['param'])
+                return message + " " + Utils.get_str_path(catalog['path'])
         if 'entityType' in catalog:
             if 'name' in catalog:
                 return message + " " + str(catalog['entityType']) + ":" + str(catalog['name'])

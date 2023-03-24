@@ -56,26 +56,16 @@ class EnvDiff:
     def diff_snapshot(self, base_env_def: EnvDefinition, comp_env_def: EnvDefinition) -> None:
         self._base_def = base_env_def
         self._comp_def = comp_env_def
-        self._logger.new_process_status(100,'Comparing snapshots. ')
         self._diff_containers()
-        self._logger.print_process_status(complete=5)
         self._diff_sources()
-        self._logger.print_process_status(complete=10)
         self._diff_spaces()
-        self._logger.print_process_status(complete=15)
         self._diff_folders()
-        self._logger.print_process_status(complete=30)
         self._diff_vds()
-        self._logger.print_process_status(complete=80)
         self._diff_reflections()
-        self._logger.print_process_status(complete=85)
         self._diff_rules()
         self._diff_queues()
-        self._logger.print_process_status(complete=90)
         self._diff_tags()
-        self._logger.print_process_status(complete=95)
         self._diff_wikis()
-        self._logger.print_process_status(complete=100)
 
     def write_diff_report(self, filename: str) -> None:
         if os.path.isfile(filename):
@@ -100,51 +90,63 @@ class EnvDiff:
             json.dump(diff_json, f, indent=4, sort_keys=True)
 
     def _diff_containers(self) -> None:
-        self._diff_lists(self._base_def.containers, self._comp_def.containers, 'path', ['containerType'], self.diff_containers)
+        self._diff_lists(self._base_def.containers, self._comp_def.containers, 'path', ['containerType'],
+                         self.diff_containers, 'Containers')
 
     def _diff_sources(self) -> None:
         fields = ['accelerationGracePeriodMs', 'accelerationNeverExpire', 'accelerationNeverRefresh',
                   'accelerationRefreshPeriodMs', 'accessControlList', 'allowCrossSourceSelection',
                   'checkTableAuthorizer', 'config', 'disableMetadataValidityCheck', 'entityType',
                   'metadataPolicy', 'owner', 'permissions', 'type']
-        self._diff_lists(self._base_def.sources, self._comp_def.sources, 'name', fields, self.diff_sources)
+        self._diff_lists(self._base_def.sources, self._comp_def.sources, 'name', fields,
+                         self.diff_sources, 'Sources')
 
     def _diff_spaces(self) -> None:
         fields = ['entityType', 'accessControlList', 'owner']
-        self._diff_lists(self._base_def.spaces, self._comp_def.spaces, 'name', fields, self.diff_spaces)
+        self._diff_lists(self._base_def.spaces, self._comp_def.spaces, 'name', fields,
+                         self.diff_spaces, 'Spaces')
 
     def _diff_folders(self) -> None:
         fields = ['entityType', 'accessControlList', 'owner']
-        self._diff_lists(self._base_def.folders, self._comp_def.folders, 'path', fields, self.diff_folders)
+        self._diff_lists(self._base_def.folders, self._comp_def.folders, 'path', fields,
+                         self.diff_folders, 'Folders')
 
     def _diff_vds(self) -> None:
         fields = ['entityType', 'accessControlList', 'owner', 'fields', 'sql', 'sqlContext', 'type']
-        self._diff_lists(self._base_def.vds_list, self._comp_def.vds_list, 'path', fields, self.diff_vds)
+        self._diff_lists(self._base_def.vds_list, self._comp_def.vds_list, 'path', fields,
+                         self.diff_vds, 'VDS')
 
     def _diff_reflections(self) -> None:
         fields = ['arrowCachingEnabled', 'canAlter', 'canView', 'enabled', 'entityType', 'name',
                   'partitionDistributionStrategy', 'type',
                   {'status': ['availability', 'combinedStatus', 'config', 'refresh']}]
-        self._diff_lists(self._base_def.reflections, self._comp_def.reflections, 'path', fields, self.diff_reflections)
+        self._diff_lists(self._base_def.reflections, self._comp_def.reflections, 'path', fields,
+                         self.diff_reflections, 'Reflections')
 
     def _diff_rules(self) -> None:
         fields = ['acceptName', 'action', 'conditions']
-        self._diff_lists(self._base_def.rules, self._comp_def.rules, 'name', fields, self.diff_rules)
+        self._diff_lists(self._base_def.rules, self._comp_def.rules, 'name', fields,
+                         self.diff_rules, 'Rules')
 
     def _diff_queues(self) -> None:
         fields = ['cpuTier', 'maxAllowedRunningJobs', 'maxStartTimeoutMs']
-        self._diff_lists(self._base_def.queues, self._comp_def.queues, 'name', fields, self.diff_queues)
+        self._diff_lists(self._base_def.queues, self._comp_def.queues, 'name', fields,
+                         self.diff_queues, 'Queues')
 
     def _diff_tags(self) -> None:
         fields = ['tags']
-        self._diff_lists(self._base_def.tags, self._comp_def.tags, 'path', fields, self.diff_tags)
+        self._diff_lists(self._base_def.tags, self._comp_def.tags, 'path', fields,
+                         self.diff_tags, 'Tags')
 
     def _diff_wikis(self) -> None:
         fields = ['text']
-        self._diff_lists(self._base_def.wikis, self._comp_def.wikis, 'path', fields, self.diff_wikis)
+        self._diff_lists(self._base_def.wikis, self._comp_def.wikis, 'path', fields,
+                         self.diff_wikis, 'Wikis')
 
-    def _diff_lists(self, base_list: list, comp_list: list, uid, fields: [], report_list: list) -> None:
+    def _diff_lists(self, base_list: list, comp_list: list, uid: str, fields: [], report_list: list, msg: str) -> None:
+        self._logger.new_process_status(len(base_list), 'Comparing snapshots for ' + msg + '. ')
         for base_item in base_list:
+            self._logger.print_process_status(increment=1)
             match_found = False
             for comp_item in comp_list:
                 diff, explanation = self._diff_item(base_item, comp_item, uid, fields)
@@ -180,7 +182,7 @@ class EnvDiff:
                 for key in field.keys():
                     diff = self._diff_item(base_item[key], comp_item[key], None, field[key])
                     if diff != DiffType.MATCH:
-                        return diff
+                        return diff, str(field)
             elif field not in base_item and field not in comp_item:
                 pass
             elif field not in base_item or field not in comp_item:
@@ -188,7 +190,7 @@ class EnvDiff:
             elif field == 'accessControlList':
                 diff_acl = self._diff_acl(base_item[field], comp_item[field])
                 if diff_acl != DiffType.MATCH:
-                    return diff_acl
+                    return diff_acl, field
             elif field == 'owner':
                 dif_owner = self._diff_owner(base_item[field], comp_item[field])
                 if dif_owner != DiffType.MATCH:

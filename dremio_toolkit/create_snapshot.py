@@ -32,7 +32,10 @@ def parse_args():
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
     arg_parser.add_argument("-p", "--password", help="User password.", required=True)
-    arg_parser.add_argument("-o", "--output-filename", help="Json file name to save Dremio environment.", required=True)
+    arg_parser.add_argument("-m", "--output-mode", help="Whether create a single output JSON file or a directory with "
+                                                        "individual files for each object.", required=False,
+                                                        choices=['FILE', 'DIR'], default='FILE')
+    arg_parser.add_argument("-o", "--output-filename", help="Json file name or a directory name to save Dremio environment.", required=True)
     arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the exception report.", required=False)
     arg_parser.add_argument("-e", "--report-delimiter", help="Delimiter to use in the exception report. Default is tab.", required=False, default='\t')
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
@@ -47,14 +50,17 @@ def parse_args():
     return parsed_args
 
 
-def create_snapshot(dremio_environment_url, user, password, output_filename, report_filename, report_delimiter,
+def create_snapshot(dremio_environment_url, user, password, output_mode, output_filename, report_filename, report_delimiter,
                     log_level, log_filename, verbose):
     logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
 
     env_api = EnvApi(dremio_environment_url, user, password, logger)
     env_reader = EnvReader(env_api, logger)
     env_def = env_reader.read_dremio_environment()
-    EnvFileWriter.save_dremio_environment(env_def, output_filename)
+    if output_mode == 'FILE':
+        EnvFileWriter.save_dremio_environment_as_file(env_def, output_filename, logger)
+    else:
+        EnvFileWriter.save_dremio_environment_as_dir(env_def, output_filename, logger)
     env_reader.write_exception_report(report_filename, report_delimiter)
 
     logger.finish_process_status_reporting()
@@ -64,5 +70,5 @@ def create_snapshot(dremio_environment_url, user, password, output_filename, rep
 
 if __name__ == '__main__':
     args = parse_args()
-    create_snapshot(args.dremio_environment_url, args.user, args.password, args.output_filename,
+    create_snapshot(args.dremio_environment_url, args.user, args.password, args.output_mode, args.output_filename,
                     args.report_filename, args.report_delimiter, args.log_level, args.log_filename, args.verbose)

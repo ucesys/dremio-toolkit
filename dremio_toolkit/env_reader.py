@@ -110,7 +110,7 @@ class EnvReader:
 				self._logger.debug(f"Processing {container_type} container: ", catalog=container)
 				self._top_level_hierarchy_context = container_type
 
-				if container not in self._env_def.containers:
+				if container_type != ContainerType.HOME and container not in self._env_def.containers:
 					self._env_def.containers.append(container)
 
 				self._read_entity(container, container_type)
@@ -122,8 +122,8 @@ class EnvReader:
 	def _read_entity(self, container, container_type) -> None:
 		entity = self._get_referenced_entity(container)
 		if entity is not None:
-			if container_type == ContainerType.HOME and entity not in self._env_def.homes:
-				self._env_def.homes.append(entity)
+			if container_type == ContainerType.HOME:
+				return
 			elif container_type == ContainerType.SPACE and entity not in self._env_def.spaces:
 				self._env_def.spaces.append(entity)
 			elif container_type == ContainerType.SOURCE and entity not in self._env_def.sources:

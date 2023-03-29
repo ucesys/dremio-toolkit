@@ -38,8 +38,6 @@ class EnvFileReader:
                         env_def.endpoint = env_item['endpoint']
             elif 'containers' in item:
                 env_def.containers = item['containers']
-            elif 'homes' in item:
-                env_def.homes = item['homes']
             elif 'sources' in item:
                 env_def.sources = item['sources']
             elif 'spaces' in item:

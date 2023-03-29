@@ -20,7 +20,6 @@
 # Data Class to contain definition of Dremio Environment
 class EnvDefinition:
     containers = []
-    homes = []
     sources = []
     spaces = []
     folders = []

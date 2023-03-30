@@ -27,6 +27,7 @@ from dremio_toolkit.env_definition import EnvDefinition
 
 class EnvFileWriter:
     CONTAINER_SELF_FILENAME = '___self.json'
+    DREMIO_ENV_FILENAME = 'dremio_environment.json'
 
     @staticmethod
     def save_dremio_environment_as_file(env_def: EnvDefinition, output_file: str, logger) -> None:
@@ -84,7 +85,7 @@ class EnvFileWriter:
         except OSError as e:
             raise logger.fatal("Error processing directory structure. OS Error: " + e.strerror)
         try:
-            f = open(os.path.join(output_dir, 'dremio_environment.json'), "w", encoding="utf-8")
+            f = open(os.path.join(output_dir, EnvFileWriter.DREMIO_ENV_FILENAME), "w", encoding="utf-8")
             json.dump({'dremio_environment': [
                             {'file_version': '1.0'},
                             {"endpoint": env_def.endpoint},

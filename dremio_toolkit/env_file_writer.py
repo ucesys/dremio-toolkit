@@ -32,9 +32,9 @@ class EnvFileWriter:
     @staticmethod
     def save_dremio_environment(env_def: EnvDefinition, output_mode: str, output_path: str, logger) -> None:
         if output_mode == 'FILE':
-            return EnvFileWriter.save_dremio_environment_as_file(env_def, output_path)
+            return EnvFileWriter.save_dremio_environment_as_file(env_def, output_path, logger)
         else:
-            return EnvFileWriter.save_dremio_environment_as_directory(env_def, output_path)
+            return EnvFileWriter.save_dremio_environment_as_directory(env_def, output_path, logger)
 
     @staticmethod
     def save_dremio_environment_as_file(env_def: EnvDefinition, output_file: str, logger) -> None:

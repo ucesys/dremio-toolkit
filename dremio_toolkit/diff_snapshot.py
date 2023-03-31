@@ -22,14 +22,18 @@ from dremio_toolkit.env_diff import EnvDiff
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
 
+
 def parse_args():
     # Process arguments
     arg_parser = argparse.ArgumentParser(
         description='create_snapshot is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and saves it as a JSON file.',
         epilog='Copyright UCE Systems Corp. For any assistance contact developer at dremio@ucesys.com'
     )
-    arg_parser.add_argument("-b", "--base-filename", help="Json file name with snapshot of the 'base' Dremio environment.", required=True)
-    arg_parser.add_argument("-c", "--comp-filename", help="Json file name with snapshot of the 'comp' Dremio environment.", required=True)
+    arg_parser.add_argument("-m", "--file-mode", help="Whether base and comp environments are in a single JSON "
+                                                      "file or a directory with individual files for each object.",
+                            required=False, choices=['FILE', 'DIR'], default='FILE')
+    arg_parser.add_argument("-b", "--base-path", help="Json file name or a directory name with snapshot of a 'base' Dremio environment.", required=True)
+    arg_parser.add_argument("-c", "--comp-path", help="Json file name or a directory name with snapshot of a 'comp' Dremio environment.", required=True)
     arg_parser.add_argument("-r", "--report-filename", help="Json file name for the 'diff' report.", required=True)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
@@ -40,12 +44,13 @@ def parse_args():
     parsed_args = arg_parser.parse_args()
     return parsed_args
 
-def diff_snapshot(base_filename, comp_filename, report_filename, log_level, log_filename, verbose):
+
+def diff_snapshot(file_mode, base_path, comp_path, report_filename, log_level, log_filename, verbose):
     # Process command
     logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
     file_reader = EnvFileReader()
-    base_env_def = file_reader.read_dremio_environment(base_filename)
-    comp_env_def = file_reader.read_dremio_environment(comp_filename)
+    base_env_def = file_reader.read_dremio_environment(file_mode, base_path)
+    comp_env_def = file_reader.read_dremio_environment(file_mode, comp_path)
     env_diff = EnvDiff(logger)
     env_diff.diff_snapshot(base_env_def, comp_env_def)
     env_diff.write_diff_report(report_filename)
@@ -58,5 +63,5 @@ def diff_snapshot(base_filename, comp_filename, report_filename, log_level, log_
 
 if __name__ == '__main__':
     args = parse_args()
-    diff_snapshot(args.base_filename, args.comp_filename, args.report_filename,
+    diff_snapshot(args.file_mode, args.base_path, args.comp_path, args.report_filename,
                   args.log_level, args.log_filename, args.verbose)

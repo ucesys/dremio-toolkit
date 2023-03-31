@@ -30,6 +30,13 @@ class EnvFileWriter:
     DREMIO_ENV_FILENAME = 'dremio_environment.json'
 
     @staticmethod
+    def save_dremio_environment(env_def: EnvDefinition, output_mode: str, output_path: str, logger) -> None:
+        if output_mode == 'FILE':
+            return EnvFileWriter.save_dremio_environment_as_file(env_def, output_path)
+        else:
+            return EnvFileWriter.save_dremio_environment_as_directory(env_def, output_path)
+
+    @staticmethod
     def save_dremio_environment_as_file(env_def: EnvDefinition, output_file: str, logger) -> None:
         if os.path.isfile(output_file):
             os.remove(output_file)
@@ -64,7 +71,7 @@ class EnvFileWriter:
             json.dump(env_snapshot, f, indent=4, sort_keys=True)
 
     @staticmethod
-    def save_dremio_environment_as_dir(env_def: EnvDefinition, output_dir: str, logger) -> None:
+    def save_dremio_environment_as_directory(env_def: EnvDefinition, output_dir: str, logger) -> None:
         try:
             # create directory structure as needed
             if os.path.isdir(output_dir):

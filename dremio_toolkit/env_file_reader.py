@@ -28,6 +28,13 @@ from dremio_toolkit.env_file_writer import EnvFileWriter
 class EnvFileReader:
 
     @staticmethod
+    def read_dremio_environment(input_mode: str, path: str):
+        if input_mode == 'FILE':
+            return EnvFileReader.read_dremio_environment_from_file(path)
+        else:
+            return EnvFileReader.read_dremio_environment_from_directory(path)
+
+    @staticmethod
     def read_dremio_environment_from_file(filename: str):
         f = open(filename, "r", encoding="utf-8")
         data = json.load(f)['data']

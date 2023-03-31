@@ -23,16 +23,16 @@ import json
 
 
 class DiffType:
-    MATCH = 0
+    NO_DIFF = 0
     DIFF_UID = 1
     DIFF_ATTRIBUTE = 2
-    MISSING_ATTRIBUTE = 3
+    DIFF_MISSING_ATTRIBUTE = 3
     DIFF_PERMISSIONS = 4
     DIFF_OWNER = 5
 
     @classmethod
     def all(cls) -> list:
-        return [cls.MATCH, cls.DIFF_UID, cls.DIFF_ATTRIBUTE]
+        return [cls.NO_DIFF, cls.DIFF_UID, cls.DIFF_ATTRIBUTE]
 
 
 class EnvDiff:
@@ -73,8 +73,8 @@ class EnvDiff:
             os.remove(filename)
         diff_json = {
             "diff": [
-                {"base": self._base_def.endpoint},
-                {"comp": self._comp_def.endpoint},
+                {"base_endpoint": self._base_def.endpoint},
+                {"comp_endpoint": self._comp_def.endpoint},
                 {"containers": self.diff_containers},
                 {"sources": self.diff_sources},
                 {"spaces": self.diff_spaces},
@@ -151,14 +151,14 @@ class EnvDiff:
             match_found = False
             for comp_item in comp_list:
                 diff, explanation = self._diff_item(base_item, comp_item, uid, fields)
-                if diff == DiffType.MATCH:
+                if diff == DiffType.NO_DIFF:
                     match_found = True
                     break
                 elif diff == DiffType.DIFF_ATTRIBUTE:
                     self._report_diff(report_list, base_item, comp_item, diff='Different attribute. ', msg=explanation)
                     match_found = True
                     break
-                elif diff == DiffType.MISSING_ATTRIBUTE:
+                elif diff == DiffType.DIFF_MISSING_ATTRIBUTE:
                     self._report_diff(report_list, base_item, diff='Missing attribute.', msg=explanation)
                     match_found = True
                     break
@@ -183,23 +183,23 @@ class EnvDiff:
             if type(field) == dict:
                 for key in field.keys():
                     diff = self._diff_item(base_item[key], comp_item[key], None, field[key])
-                    if diff != DiffType.MATCH:
+                    if diff != DiffType.NO_DIFF:
                         return diff, str(field)
             elif field not in base_item and field not in comp_item:
                 pass
             elif field not in base_item or field not in comp_item:
-                return DiffType.MISSING_ATTRIBUTE, field
+                return DiffType.DIFF_MISSING_ATTRIBUTE, field
             elif field == 'accessControlList':
                 diff_acl = self._diff_acl(base_item[field], comp_item[field])
-                if diff_acl != DiffType.MATCH:
+                if diff_acl != DiffType.NO_DIFF:
                     return diff_acl, field
             elif field == 'owner':
                 dif_owner = self._diff_owner(base_item[field], comp_item[field])
-                if dif_owner != DiffType.MATCH:
+                if dif_owner != DiffType.NO_DIFF:
                     return dif_owner, field
             elif base_item[field] != comp_item[field]:
                 return DiffType.DIFF_ATTRIBUTE, field
-        return DiffType.MATCH, None
+        return DiffType.NO_DIFF, None
 
     def _diff_owner(self, base_owner: dict, comp_owner: dict) -> int:
         if base_owner['ownerType'] != comp_owner['ownerType']:
@@ -208,43 +208,43 @@ class EnvDiff:
             base_user_name = self._resolve_referenced_principal(base_owner['ownerId'], self._base_def.referenced_users)
             comp_user_name = self._resolve_referenced_principal(comp_owner['ownerId'], self._comp_def.referenced_users)
             if base_user_name == comp_user_name:
-                return DiffType.MATCH
+                return DiffType.NO_DIFF
             else:
                 return DiffType.DIFF_OWNER
         elif base_owner['ownerType'] == 'GROUP':
             base_group_name = self._resolve_referenced_principal(base_owner['ownerId'], self._base_def.referenced_groups)
             comp_group_name = self._resolve_referenced_principal(comp_owner['ownerId'], self._comp_def.referenced_groups)
             if base_group_name == comp_group_name:
-                return DiffType.MATCH
+                return DiffType.NO_DIFF
             else:
                 return DiffType.DIFF_OWNER
         elif base_owner['ownerType'] == 'ROLE':
             base_role_name = self._resolve_referenced_principal(base_owner['ownerId'], self._base_def.referenced_roles)
             comp_role_name = self._resolve_referenced_principal(comp_owner['ownerId'], self._comp_def.referenced_roles)
             if base_role_name == comp_role_name:
-                return DiffType.MATCH
+                return DiffType.NO_DIFF
             else:
                 return DiffType.DIFF_OWNER
 
     def _diff_acl(self, base_acl: dict, comp_acl: dict) -> int:
         diff_users = self._diff_acl_permissions('users', base_acl, comp_acl,
                                                 self._base_def.referenced_users, self._comp_def.referenced_users)
-        if diff_users != DiffType.MATCH:
+        if diff_users != DiffType.NO_DIFF:
             return diff_users
         diff_groups = self._diff_acl_permissions('groups', base_acl, comp_acl,
                                                  self._base_def.referenced_groups, self._comp_def.referenced_groups)
-        if diff_groups != DiffType.MATCH:
+        if diff_groups != DiffType.NO_DIFF:
             return diff_groups
         diff_roles = self._diff_acl_permissions('roles', base_acl, comp_acl,
                                                 self._base_def.referenced_roles, self._comp_def.referenced_roles)
-        if diff_roles != DiffType.MATCH:
+        if diff_roles != DiffType.NO_DIFF:
             return diff_roles
-        return DiffType.MATCH
+        return DiffType.NO_DIFF
 
     def _diff_acl_permissions(self, principal_type: str, base_acl: dict, comp_acl: dict,
                               base_referenced_principals: list, comp_referenced_principals: list):
         if base_acl == {} and comp_acl == {}:
-            return DiffType.MATCH
+            return DiffType.NO_DIFF
         if principal_type in base_acl and principal_type in comp_acl:
             for base_principal_acl in base_acl[principal_type]:
                 base_principal_name = self._resolve_referenced_principal(base_principal_acl['id'], base_referenced_principals)
@@ -258,9 +258,9 @@ class EnvDiff:
                         break
                 if not match_found:
                     return DiffType.DIFF_PERMISSIONS
-            return DiffType.MATCH
+            return DiffType.NO_DIFF
         elif principal_type not in base_acl and principal_type not in comp_acl:
-            return DiffType.MATCH
+            return DiffType.NO_DIFF
         return DiffType.DIFF_PERMISSIONS
 
     def _resolve_referenced_principal(self, principal_id: str, referenced_principals: list) -> str:

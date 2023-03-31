@@ -166,9 +166,8 @@ class EnvWriter:
         # Iterate through the remainder VDS in the list
         # Go with decreasing index so we can remove VDS from the list
         vds_count = len(self._env_def.vds_list)
-        for i in range(vds_count - 1, -1, -1):
+        for vds in reversed(self._env_def.vds_list):
             self._logger.print_process_status(increment=1)
-            vds = self._env_def.vds_list[i]
             vds_hierarchy_level = processing_level
             sql_dependency_paths = self._get_vds_dependency_paths(vds)
             if sql_dependency_paths:
@@ -215,11 +214,11 @@ class EnvWriter:
         self._logger.new_process_status(len(self._vds_hierarchy), 'Pushing VDS Hierarchy. ')
         # First push all VDS that have been ordered into a hierarchy
         for level in range(0, 10, 1):
-            for i in range(len(self._vds_hierarchy)-1, -1, -1):
-                if level == self._vds_hierarchy[i][0]:
-                    vds = self._vds_hierarchy[i][1]
+            for vds_hierarchy in reversed(self._vds_hierarchy):
+                if level == vds_hierarchy[0]:
+                    vds = vds_hierarchy[1]
                     if self._write_entity(vds):
-                        self._vds_hierarchy.pop(i)
+                        self._vds_hierarchy.remove(vds_hierarchy)
                     self._logger.print_process_status(increment=1)
         # Iterate through the rest of VDS until all VDS have been successfully pushed to the target environment or
         # no VDS has been successfully pushed during the last iteration
@@ -227,10 +226,9 @@ class EnvWriter:
         while self._env_def.vds_list:
             self._logger.print_process_status(increment=1)
             vds_updated = False
-            for i in range(len(self._env_def.vds_list) - 1, -1, -1):
-                vds = self._env_def.vds_list[i]
+            for vds in reversed(self._env_def.vds_list):
                 if self._write_entity(vds):
-                    self._env_def.vds_list.pop(i)
+                    self._env_def.vds_list.remove(vds)
                     vds_updated = True
             if not vds_updated:
                 break

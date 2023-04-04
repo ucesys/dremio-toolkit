@@ -52,6 +52,9 @@ class EnvWriter:
     _failed_wiki = []
     _failed_tags = []
 
+    # Last errors
+    _last_entity_error = {}
+
     def __init__(self, env_api: EnvApi, env_def: EnvDefinition, logger: Logger):
         self._env_api = env_api
         self._env_def = env_def
@@ -80,20 +83,21 @@ class EnvWriter:
             f.write("ERROR" + delimiter + "OBJECT_TYPE" + delimiter + "ID" + delimiter + "PATH or NAME" +
                     delimiter + "NOTES" + "\n")
             for vds in self._env_def.vds_list:
-                f.write('Unable to push' + delimiter + 'VDS' + delimiter + (vds['id'] if 'id' in vds else '') +
-                        delimiter + str(vds['path']) + delimiter + '' + '\n')
+                f.write('Unable to push. Error: ' + self._get_entity_error(vds) + delimiter + 'VDS' + delimiter +
+                        (vds['id'] if 'id' in vds else '') + delimiter + str(vds['path']) + delimiter + '\n')
             for vds in self._vds_hierarchy:
-                f.write('Unable to push' + delimiter + 'VDS' + delimiter + (vds[1]['id'] if 'id' in vds[1] else '') +
+                f.write('Unable to push. Error: ' + self._get_entity_error(vds[1]) + delimiter + 'VDS' + delimiter +
+                        (vds[1]['id'] if 'id' in vds[1] else '') +
                         delimiter + str(vds[1]['path']) + delimiter + 'Hierarchy Level: ' + str(vds[0]) + '\n')
             for source in self._failed_sources:
-                f.write('Unable to push' + delimiter + 'SOURCE' + delimiter + (source['id'] if 'id' in source else '') +
-                        delimiter + source['name'] + delimiter + '' + '\n')
+                f.write('Unable to push. Error: ' + self._get_entity_error(source) + delimiter + 'SOURCE' + delimiter +
+                        (source['id'] if 'id' in source else '') + delimiter + source['name'] + delimiter + '\n')
             for space in self._failed_spaces:
-                f.write('Unable to push' + delimiter + 'SPACE' + delimiter + (space['id'] if 'id' in space else '') +
-                        delimiter + space['name'] + delimiter + '' + '\n')
+                f.write('Unable to push. Error: ' + self._get_entity_error(space) + delimiter + 'SPACE' + delimiter +
+                        (space['id'] if 'id' in space else '') + delimiter + space['name'] + delimiter + '\n')
             for folder in self._failed_folders:
-                f.write('Unable to push' + delimiter + 'FOLDER' + delimiter + (folder['id'] if 'id' in folder else '') +
-                        delimiter + str(folder['path']) + delimiter + '' + '\n')
+                f.write('Unable to push. Error: ' + self._get_entity_error(folder) + delimiter + 'FOLDER' + delimiter + (folder['id'] if 'id' in folder else '') +
+                        delimiter + str(folder['path']) + delimiter + '\n')
             for wiki in self._failed_wiki:
                 f.write('Unable to push' + delimiter + 'WIKI' + delimiter + (wiki['id'] if 'id' in wiki else '') +
                         delimiter + str(wiki['path']) + delimiter + '' + '\n')
@@ -249,6 +253,7 @@ class EnvWriter:
         if existing_entity is None:
             new_entity = self._env_api.create_catalog(entity)
             if new_entity is None:
+                self._save_entity_error(entity, self._logger.get_last_error_message())
                 return False
         else:
             # Update entity id and concurrency tag with data from entity existing in the target environment
@@ -264,7 +269,9 @@ class EnvWriter:
             if updated_entity is None:
                 # Remove id from the entity for proper reporting
                 Utils.pop_it(entity, ['id'])
+                self._save_entity_error(entity, self._logger.get_last_error_message())
                 return False
+        self._remove_entity_error(entity)
         return True
 
     def _write_reflections(self) -> None:
@@ -465,3 +472,21 @@ class EnvWriter:
             if item[1]['id'] == vds_id:
                 return item[0]
         return None
+
+    def _save_entity_error(self, entity: dict, error: str):
+        key = Utils.get_str_path(entity['path'] if 'path' in entity else entity['name'] if 'name' in entity else None)
+        if key:
+            self._last_entity_error[key] = error
+
+    def _remove_entity_error(self, entity: dict):
+        key = Utils.get_str_path(entity['path'] if 'path' in entity else entity['name'] if 'name' in entity else None)
+        if key and key in self._last_entity_error:
+            self._last_entity_error[key] = None
+
+    def _get_entity_error(self, entity: dict):
+        key = Utils.get_str_path(entity['path'] if 'path' in entity else entity['name'] if 'name' in entity else None)
+        if key:
+            error = self._last_entity_error[key]
+            if error:
+                return error
+        return ''

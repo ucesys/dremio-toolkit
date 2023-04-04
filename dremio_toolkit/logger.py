@@ -31,6 +31,8 @@ class Logger:
     # Error counter
     _error_count = 0
 
+    _last_error_message = ''
+
     # Status print
     _process_prefix_text = ''
     _process_last_complete = 0
@@ -53,7 +55,11 @@ class Logger:
         self._root_logger.critical(self._enrich_message(message, catalog))
         raise RuntimeError("Critical message: " + str(message))
 
+    def get_last_error_message(self):
+        return self._last_error_message
+
     def error(self, message: str, catalog: str = None, object_list: list = None) -> None:
+        self._last_error_message = message
         self._error_count += 1
         if self._error_count > self._max_errors:
             self._root_logger.critical("Reached max number of errors: " + str(self._max_errors))

@@ -28,6 +28,8 @@ from dremio_toolkit.env_definition import EnvDefinition
 class EnvFileWriter:
     CONTAINER_SELF_FILENAME = '___self.json'
     DREMIO_ENV_FILENAME = 'dremio_environment.json'
+    DREMIO_ENV_FILE_VERSION = "1.1"
+
 
     @staticmethod
     def save_dremio_environment(env_def: EnvDefinition, output_mode: str, output_path: str, logger) -> None:
@@ -44,11 +46,11 @@ class EnvFileWriter:
         env_snapshot = {
             "data": [
                 {'dremio_environment': [
-                    {'file_version': '1.0'},
+                    {'file_version': EnvFileWriter.DREMIO_ENV_FILE_VERSION},
                     {"endpoint": env_def.endpoint},
-                    {'timestamp_utc': str(datetime.utcnow())}
+                    {'timestamp_utc':
+                        str(datetime.utcnow()) if env_def.timestamp_utc is None else env_def.timestamp_utc}
                 ]},
-                {'containers': env_def.containers},
                 {'sources': env_def.sources},
                 {'spaces': env_def.spaces},
                 {'folders': env_def.folders},
@@ -77,6 +79,7 @@ class EnvFileWriter:
             if os.path.isdir(output_dir):
                 rmtree(output_dir)
             os.makedirs(output_dir)
+            os.makedirs(os.path.join(output_dir, 'containers').encode(encoding='utf-8', errors='strict'))
             os.makedirs(os.path.join(output_dir, 'sources').encode(encoding='utf-8', errors='strict'))
             os.makedirs(os.path.join(output_dir, 'spaces').encode(encoding='utf-8', errors='strict'))
             os.makedirs(os.path.join(output_dir, 'reflections').encode(encoding='utf-8', errors='strict'))
@@ -94,9 +97,10 @@ class EnvFileWriter:
         try:
             f = open(os.path.join(output_dir, EnvFileWriter.DREMIO_ENV_FILENAME), "w", encoding="utf-8")
             json.dump({'dremio_environment': [
-                            {'file_version': '1.0'},
+                            {'file_version': EnvFileWriter.DREMIO_ENV_FILE_VERSION},
                             {"endpoint": env_def.endpoint},
-                            {'timestamp_utc': str(datetime.utcnow())}
+                            {'timestamp_utc':
+                                str(datetime.utcnow()) if env_def.timestamp_utc is None else env_def.timestamp_utc}
                         ]}, f, indent=4, sort_keys=True)
             f.close()
             for source in env_def.sources:

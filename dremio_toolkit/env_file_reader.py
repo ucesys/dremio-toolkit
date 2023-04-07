@@ -45,9 +45,10 @@ class EnvFileReader:
                 for env_item in item['dremio_environment']:
                     if 'endpoint' in env_item:
                         env_def.endpoint = env_item['endpoint']
-                        break
-            elif 'containers' in item:
-                env_def.containers = item['containers']
+                    elif 'file_version' in env_item:
+                        env_def.file_version = env_item['file_version']
+                    elif 'timestamp_utc' in env_item:
+                        env_def.timestamp_utc = env_item['timestamp_utc']
             elif 'sources' in item:
                 env_def.sources = item['sources']
             elif 'spaces' in item:
@@ -95,8 +96,16 @@ class EnvFileReader:
         try:
             env_def = EnvDefinition()
             f = open(os.path.join(source_directory, EnvFileWriter.DREMIO_ENV_FILENAME), "r", encoding="utf-8")
-            env_def.dremio_get_config = json.load(f)
+            dremio_environment = json.load(f)['dremio_environment']
+            for env_item in dremio_environment:
+                if 'endpoint' in env_item:
+                    env_def.endpoint = env_item['endpoint']
+                elif 'file_version' in env_item:
+                    env_def.file_version = env_item['file_version']
+                elif 'timestamp_utc' in env_item:
+                    env_def.timestamp_utc = env_item['timestamp_utc']
             f.close()
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'containers'), env_def.containers, None, None)
             EnvFileReader._collect_directory(os.path.join(source_directory, 'sources'), env_def.sources, None, None)
             EnvFileReader._collect_directory(os.path.join(source_directory, 'spaces'), env_def.spaces, env_def.folders,
                                              env_def.vds_list)

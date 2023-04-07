@@ -18,7 +18,7 @@
 
 import argparse
 from dremio_toolkit.utils import Utils
-from dremio_toolkit.env_diff import EnvDiff
+from dremio_toolkit.env_file_writer import EnvFileWriter
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
 
@@ -26,16 +26,12 @@ from dremio_toolkit.env_file_reader import EnvFileReader
 def parse_args():
     # Process arguments
     arg_parser = argparse.ArgumentParser(
-        description='diff_snapshot is a part of the Dremio Toolkit. It reads two Dremio enviroment snapshots '
-                    'from files and produces report on differences.',
+        description='implode_snapshot is a part of the Dremio Toolkit. It reads a Dremio snapshot from a directory with '
+                    'JSON files and saves it into a single JSON file.',
         epilog='Copyright UCE Systems Corp. For any assistance contact developer at dremio@ucesys.com'
     )
-    arg_parser.add_argument("-m", "--file-mode", help="Whether base and comp environments are in a single JSON "
-                                                      "file or a directory with individual files for each object.",
-                            required=False, choices=['FILE', 'DIR'], default='FILE')
-    arg_parser.add_argument("-b", "--base-path", help="Json file name or a directory name with snapshot of a 'base' Dremio environment.", required=True)
-    arg_parser.add_argument("-c", "--comp-path", help="Json file name or a directory name with snapshot of a 'comp' Dremio environment.", required=True)
-    arg_parser.add_argument("-r", "--report-filename", help="Json file name for the 'diff' report.", required=True)
+    arg_parser.add_argument("-i", "--input-path", help="Directory name with snapshot of a Dremio environment.", required=True)
+    arg_parser.add_argument("-o", "--output-path", help="Target filename for saving the snapshot as a JSON file.", required=True)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
     arg_parser.add_argument("-v", "--verbose", help="Set Log to verbose to print object definitions instead of object IDs.",
@@ -46,15 +42,12 @@ def parse_args():
     return parsed_args
 
 
-def diff_snapshot(file_mode, base_path, comp_path, report_filename, log_level, log_filename, verbose):
+def implode_snapshot(input_path, output_path, log_level, log_filename, verbose):
     # Process command
     logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
     file_reader = EnvFileReader()
-    base_env_def = file_reader.read_dremio_environment(file_mode, base_path)
-    comp_env_def = file_reader.read_dremio_environment(file_mode, comp_path)
-    env_diff = EnvDiff(logger)
-    env_diff.diff_snapshot(base_env_def, comp_env_def)
-    env_diff.write_diff_report(report_filename)
+    env_def = file_reader.read_dremio_environment('DIR', input_path)
+    EnvFileWriter.save_dremio_environment(env_def, 'FILE', output_path, logger)
 
     # Return process status to the OS
     logger.finish_process_status_reporting()
@@ -64,5 +57,4 @@ def diff_snapshot(file_mode, base_path, comp_path, report_filename, log_level, l
 
 if __name__ == '__main__':
     args = parse_args()
-    diff_snapshot(args.file_mode, args.base_path, args.comp_path, args.report_filename,
-                  args.log_level, args.log_filename, args.verbose)
+    implode_snapshot(args.input_path, args.output_path, args.log_level, args.log_filename, args.verbose)

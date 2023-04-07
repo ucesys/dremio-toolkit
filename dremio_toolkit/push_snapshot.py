@@ -27,7 +27,8 @@ from dremio_toolkit.env_file_reader import EnvFileReader
 def parse_args():
     # Process arguments
     arg_parser = argparse.ArgumentParser(
-        description='create_snapshot is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and saves it as a JSON file.',
+        description='push_snapshot is a part of the Dremio Toolkit. It reads a Dremio snapshot from a file or '
+                    'directory and pushes it into a Dremio environment via API.',
         epilog='Copyright UCE Systems Corp. For any assistance contact developer at dremio@ucesys.com'
     )
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)

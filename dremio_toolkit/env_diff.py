@@ -73,6 +73,10 @@ class EnvDiff:
             os.remove(filename)
         diff_json = {
             "diff": [
+                {"base_file_version": self._base_def.file_version},
+                {"comp_file_version": self._comp_def.file_version},
+                {"base_timestamp_utc": self._base_def.timestamp_utc},
+                {"comp_timestamp_utc": self._comp_def.timestamp_utc},
                 {"base_endpoint": self._base_def.endpoint},
                 {"comp_endpoint": self._comp_def.endpoint},
                 {"containers": self.diff_containers},

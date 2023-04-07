@@ -35,5 +35,8 @@ class EnvDefinition:
     referenced_users = []
     referenced_groups = []
     referenced_roles = []
-    endpoint: str = None
+    # dremio_environment
+    file_version = 1
+    endpoint = None
+    timestamp_utc = None
 

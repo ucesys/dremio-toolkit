@@ -103,3 +103,40 @@ PYTHONPATH=./ python dremio_toolkit/exec_sql.py -d <DREMIO_HOST>:<DREMIO_PORT> -
     -r or --report-filename : File name for the JSON report.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -f or --log-filename : Set Log to write to a specified file instead of STDOUT."
+
+
+## explode_snapshot
+
+This  command reads Dremio Environment definition from a single JSON file and saves it into a target directory as a set of JSON files.
+Each JSON file represents a single Dremio object, such as VDS, Reflection, etc. <br>
+This function is very useful when you need to extract a VDS or other individual objects from a large JSON file. 
+Another scenario is when you created a Dremio snapshot as a single JSON file and need to check it in into your repository at a more granular level.
+
+### Syntax
+```commandline
+PYTHONPATH=./ python dremio_toolkit/explode_snapshot.py -i <input_path> -o <output_path>
+```
+ 
+### Arguments
+
+    -i or --input-path : Path to a JSON file with Dremio environment definition.
+    -o or --output-path : Path to a target directory to save exploded view of the Dremio environment as a set of JSON files.
+    -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
+    -f or --log-filename : Set Log to write to a specified file instead of STDOUT."
+
+## implode_snapshot
+
+This command reads Dremio Environment definition from a directory with a set of JSON files and saves it into a single JSON file.
+It is opposite to _explode_snapshot_ command <br>
+
+### Syntax
+```commandline
+PYTHONPATH=./ python dremio_toolkit/implode_snapshot.py -i <input_path> -o <output_path>
+```
+ 
+### Arguments
+
+    -i or --input-path : Path to a directory with the exploded view of the Dremio environment as a set of JSON files.
+    -o or --output-path : Path to a target JSON file to save imploded view of the Dremio environment definition.
+    -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
+    -f or --log-filename : Set Log to write to a specified file instead of STDOUT."

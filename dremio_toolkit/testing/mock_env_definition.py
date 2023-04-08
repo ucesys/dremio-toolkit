@@ -23,6 +23,7 @@ from dremio_toolkit.env_definition import EnvDefinition
 
 def mock_env_definition() -> EnvDefinition:
     env_def = EnvDefinition()
+
     env_def.containers = [
         {
             "containerType": "SPACE",
@@ -45,6 +46,7 @@ def mock_env_definition() -> EnvDefinition:
             "type": "CONTAINER"
         }
     ]
+
     env_def.sources = [
         {
             "accelerationGracePeriodMs": 10800000,
@@ -93,6 +95,7 @@ def mock_env_definition() -> EnvDefinition:
             "type": "NAS"
         }
     ]
+
     env_def.spaces = [
         {
             "accessControlList": {
@@ -149,6 +152,7 @@ def mock_env_definition() -> EnvDefinition:
             "tag": "jhEcARN4ZW0="
         }
     ]
+
     env_def.folders = [
         {
             "accessControlList": {},
@@ -178,6 +182,7 @@ def mock_env_definition() -> EnvDefinition:
             "tag": "kad/yd+PUUU="
         }
     ]
+
     env_def.vds_list = [
         {
             "accessControlList": {},
@@ -239,6 +244,7 @@ def mock_env_definition() -> EnvDefinition:
             "type": "VIRTUAL_DATASET"
         }
     ]
+
     env_def.vds_parents = [
         {
             'id': '9a57f624-b607-4834-bc3d-76e00dcb55dd',
@@ -246,6 +252,7 @@ def mock_env_definition() -> EnvDefinition:
             'path': ['TestSpace', 'MyFolder', 'TaxiTrips']
         }
    ]
+
     env_def.reflections = [
         {
             "arrowCachingEnabled": False,
@@ -278,6 +285,7 @@ def mock_env_definition() -> EnvDefinition:
             "updatedAt": "2023-02-04T11:28:56.438Z"
         }
     ]
+
     env_def.queues = [
         {
             "cpuTier": "CRITICAL",
@@ -288,6 +296,7 @@ def mock_env_definition() -> EnvDefinition:
             "tag": "dMNrA1KnVF0="
         }
     ]
+
     env_def.rules = [
         {
             "acceptId": "4bfc8f5e-b255-4e73-9018-96c1e7f5b81f",
@@ -298,6 +307,7 @@ def mock_env_definition() -> EnvDefinition:
             "name": "UI Previews"
         }
     ]
+
     env_def.tags = [
         {
             "entity_id": "9a57f624-b607-4834-bc3d-76e00dcb55dd",
@@ -313,6 +323,7 @@ def mock_env_definition() -> EnvDefinition:
             "version": "1mnAO+r2rrI="
         }
     ]
+
     wikis_text = "#  Wikis & Tags\n\n![Gnarly Catalog](https://d33wubrfki0l68.cloudfront.net/c1a54376c45a9276c080f3d10ed25ce61c17bcd2/2b946/img/home/open-source-for-everyone.svg)\n\nYou are reading the wiki for your home space! You can create and edit this information for any source, space, or folder.\n\nThis sidebar always shows the wiki for the current source, space or folder you are browsing.\n\nWhen previewing datasets, click on the `Catalog` tab to create a wiki or add tags to that dataset.\n\n**Tip:** You can hide the wiki by clicking on the sidebar icon on upper right hand side."
     env_def.wikis = [
         {
@@ -340,6 +351,7 @@ def mock_env_definition() -> EnvDefinition:
             "version": 0
         }
     ]
+
     env_def.referenced_users = [
         {
             "@type": "EnterpriseUser",
@@ -360,6 +372,7 @@ def mock_env_definition() -> EnvDefinition:
             "tag": "Ee65lPjZOpU="
         }
     ]
+
     env_def.referenced_roles = [
         {
             "description": "Predefined System Role",
@@ -370,17 +383,11 @@ def mock_env_definition() -> EnvDefinition:
             "type": "SYSTEM"
         }
     ]
+
     env_def.endpoint = "http://localhost:9047/"
-    env_def.dremio_environment = [
-        {
-            "file_version": "1.0"
-        },
-        {
-            "endpoint": "http://localhost:9047/"
-        },
-        {
-            "timestamp_utc": "2023-01-01 00:00:00"
-        }
-    ]
+    env_def.file_version = "1.1"
+    env_def.endpoint = "http://localhost:9047/"
+    env_def.timestamp_utc = "2023-01-01 00:00:00"
+
     return env_def
 

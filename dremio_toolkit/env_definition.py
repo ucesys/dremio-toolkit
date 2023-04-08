@@ -37,7 +37,7 @@ class EnvDefinition:
         self.referenced_groups = []
         self.referenced_roles = []
         # dremio_environment
-        self.file_version = 1
+        self.file_version = None
         self.endpoint = None
         self.timestamp_utc = None
 

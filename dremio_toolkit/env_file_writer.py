@@ -17,7 +17,8 @@
 #########################################################################
 
 import json
-import os, errno
+import os
+import errno
 from datetime import datetime
 from shutil import rmtree
 
@@ -29,7 +30,6 @@ class EnvFileWriter:
     CONTAINER_SELF_FILENAME = '___self.json'
     DREMIO_ENV_FILENAME = 'dremio_environment.json'
     DREMIO_ENV_FILE_VERSION = "1.1"
-
 
     @staticmethod
     def save_dremio_environment(env_def: EnvDefinition, output_mode: str, output_path: str, logger) -> None:

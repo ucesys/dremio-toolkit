@@ -1,58 +1,13 @@
 { "data": [{
     "dremio_environment": [
         {
-            "file_version": "1.0"
+            "file_version": "1.1"
         },
         {
             "endpoint": "http://localhost:9047/"
         },
         {
             "timestamp_utc": "2023-01-01 00:00:00"
-        }
-    ]
-},
-{
-    "containers": [
-        {
-            "containerType": "HOME",
-            "createdAt": "2023-02-03T21:08:05.131Z",
-            "id": "4352b221-abcd-4ba9-a92d-b0dc1c2f36e4",
-            "path": [
-                "@user"
-            ],
-            "tag": "S10NS8HStag=",
-            "type": "CONTAINER"
-        },
-        {
-            "containerType": "SPACE",
-            "createdAt": "2023-02-03T21:36:29.932Z",
-            "id": "86b7f8ff-cdaa-455c-9d12-51ec0dbdcf4f",
-            "path": [
-                "TestSpace"
-            ],
-            "tag": "jhEcARN4ZW0=",
-            "type": "CONTAINER"
-        },
-        {
-            "containerType": "SOURCE",
-            "createdAt": "2023-02-03T21:37:24.996Z",
-            "id": "01b1d888-1165-4fe7-b4cc-712688e94dad",
-            "path": [
-                "LocalData"
-            ],
-            "tag": "JDLrVceDJ68=",
-            "type": "CONTAINER"
-        }
-    ]
-},
-{
-    "homes": [
-        {
-            "children": [],
-            "entityType": "home",
-            "id": "4352b221-0aac-4ba9-a92d-b0dc1c2f36e4",
-            "name": "@user",
-            "tag": "S10NS8HSm9g="
         }
     ]
 },
@@ -259,6 +214,15 @@
     ]
 },
 {
+    "vds_parents": [
+        {
+            "id": "9a57f624-b607-4834-bc3d-76e00dcb55dd",
+            "parents": ["/path/to/dataset", "/other/path/to/dataset"],
+            "path": ["TestSpace", "MyFolder", "TaxiTrips"]
+        }
+    ]
+},
+{
     "files": []
 },
 {
@@ -338,14 +302,6 @@
 },
 {
     "wikis": [
-        {
-            "entity_id": "4352b221-0aac-4ba9-a92d-b0dc1c2f36e4",
-            "path": [
-                "@user"
-            ],
-            "text": "#  Wikis & Tags\n\n![Gnarly Catalog](https://d33wubrfki0l68.cloudfront.net/c1a54376c45a9276c080f3d10ed25ce61c17bcd2/2b946/img/home/open-source-for-everyone.svg)\n\nYou are reading the wiki for your home space! You can create and edit this information for any source, space, or folder.\n\nThis sidebar always shows the wiki for the current source, space or folder you are browsing.\n\nWhen previewing datasets, click on the `Catalog` tab to create a wiki or add tags to that dataset.\n\n**Tip:** You can hide the wiki by clicking on the sidebar icon on upper right hand side.",
-            "version": 0
-        },
         {
             "entity_id": "86b7f8ff-cdaa-455c-9d12-51ec0dbdcf4f",
             "path": [

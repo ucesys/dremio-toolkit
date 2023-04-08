@@ -19,24 +19,25 @@
 
 # Data Class to contain definition of Dremio Environment
 class EnvDefinition:
-    containers = []
-    sources = []
-    spaces = []
-    folders = []
-    vds_list = []
-    vds_parents = []
-    reflections = []
-    rules = []
-    queues = []
-    votes = []
-    files = []
-    tags = []
-    wikis = []
-    referenced_users = []
-    referenced_groups = []
-    referenced_roles = []
-    # dremio_environment
-    file_version = 1
-    endpoint = None
-    timestamp_utc = None
+    def __init__(self):
+        self.containers = []
+        self.sources = []
+        self.spaces = []
+        self.folders = []
+        self.vds_list = []
+        self.vds_parents = []
+        self.reflections = []
+        self.rules = []
+        self.queues = []
+        self.votes = []
+        self.files = []
+        self.tags = []
+        self.wikis = []
+        self.referenced_users = []
+        self.referenced_groups = []
+        self.referenced_roles = []
+        # dremio_environment
+        self.file_version = 1
+        self.endpoint = None
+        self.timestamp_utc = None
 

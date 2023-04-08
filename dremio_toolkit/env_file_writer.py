@@ -44,29 +44,29 @@ class EnvFileWriter:
             os.remove(output_file)
 
         env_snapshot = {
-            "data": [
-                {'dremio_environment': [
-                    {'file_version': EnvFileWriter.DREMIO_ENV_FILE_VERSION},
-                    {"endpoint": env_def.endpoint},
-                    {'timestamp_utc':
-                        str(datetime.utcnow()) if env_def.timestamp_utc is None else env_def.timestamp_utc}
-                ]},
-                {'sources': env_def.sources},
-                {'spaces': env_def.spaces},
-                {'folders': env_def.folders},
-                {'vds': env_def.vds_list},
-                {'vds_parents': env_def.vds_parents},
-                {'files': env_def.files},
-                {'reflections': env_def.reflections},
-                {'queues': env_def.queues},
-                {'rules': env_def.rules},
-                {'tags': env_def.tags},
-                {'wikis': env_def.wikis},
-                {'votes': env_def.votes},
-                {'referenced_users': env_def.referenced_users},
-                {'referenced_groups': env_def.referenced_groups},
-                {'referenced_roles': env_def.referenced_roles},
-            ]
+            "data": {
+                'dremio_environment': {
+                    'file_version': EnvFileWriter.DREMIO_ENV_FILE_VERSION,
+                    "endpoint": env_def.endpoint,
+                    'timestamp_utc':
+                        str(datetime.utcnow()) if env_def.timestamp_utc is None else env_def.timestamp_utc
+                },
+                'sources': env_def.sources,
+                'spaces': env_def.spaces,
+                'folders': env_def.folders,
+                'vds': env_def.vds_list,
+                'vds_parents': env_def.vds_parents,
+                'files': env_def.files,
+                'reflections': env_def.reflections,
+                'queues': env_def.queues,
+                'rules': env_def.rules,
+                'tags': env_def.tags,
+                'wikis': env_def.wikis,
+                'votes': env_def.votes,
+                'referenced_users': env_def.referenced_users,
+                'referenced_groups': env_def.referenced_groups,
+                'referenced_roles': env_def.referenced_roles,
+            }
         }
 
         with open(output_file, "w", encoding="utf-8") as f:
@@ -122,8 +122,8 @@ class EnvFileWriter:
                 EnvFileWriter._write_folder_json_file(os.path.join(output_dir, "spaces"), folder)
             for vds in env_def.vds_list:
                 EnvFileWriter._write_entity_json_file(os.path.join(output_dir, "spaces"), vds)
-            for vds in env_def.vds_parents:
-                EnvFileWriter._write_object_json_file(os.path.join(output_dir, "vds_parents"), vds)
+            for vds_parent in env_def.vds_parents:
+                EnvFileWriter._write_object_json_file(os.path.join(output_dir, "vds_parents"), vds_parent)
             for reflection in env_def.reflections:
                 EnvFileWriter._write_object_json_file(os.path.join(output_dir, "reflections"), reflection)
             for rule in env_def.rules:

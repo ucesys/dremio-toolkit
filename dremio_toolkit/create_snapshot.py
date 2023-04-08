@@ -51,15 +51,14 @@ def parse_args():
     return parsed_args
 
 
-def create_snapshot(dremio_environment_url, user, password, output_mode, output_path, report_filename, report_delimiter,
-                    log_level, log_filename, verbose):
-    logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
-
-    env_api = EnvApi(dremio_environment_url, user, password, logger)
+def create_snapshot(env_api, logger, output_mode, output_path, report_filename, report_delimiter):
     env_reader = EnvReader(env_api, logger)
     env_def = env_reader.read_dremio_environment()
+
+    if report_filename is not None:
+        env_reader.write_exception_report(report_filename, report_delimiter)
+
     EnvFileWriter.save_dremio_environment(env_def, output_mode, output_path, logger)
-    env_reader.write_exception_report(report_filename, report_delimiter)
 
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
@@ -68,5 +67,11 @@ def create_snapshot(dremio_environment_url, user, password, output_mode, output_
 
 if __name__ == '__main__':
     args = parse_args()
-    create_snapshot(args.dremio_environment_url, args.user, args.password, args.output_mode, args.output_path,
-                    args.report_filename, args.report_delimiter, args.log_level, args.log_filename, args.verbose)
+
+    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_filename)
+    env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger)
+
+    create_snapshot(
+        env_api=env_api, logger=logger, output_mode=args.output_mode, output_path=args.output_path,
+        report_filename=args.report_filename, report_delimiter=args.report_delimiter
+    )

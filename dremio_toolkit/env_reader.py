@@ -35,17 +35,14 @@ class ContainerType:
 
 
 class EnvReader:
-	_env_api = None
-	_logger = None
-	_env_def = EnvDefinition()
-	_failed_vds_graphs = []
-
 	def __init__(self, env_api: EnvApi, logger: Logger):
+		self._env_def = EnvDefinition()
 		self._env_api = env_api
 		self._logger = logger
 		self._env_def.endpoint = env_api.get_env_endpoint()
 		# Current top-level hierarchy context: Home, Space, Source
 		self._top_level_hierarchy_context: Optional[str] = None
+		self._failed_vds_graphs = []
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
 	def read_dremio_environment(self) -> EnvDefinition:
@@ -57,8 +54,6 @@ class EnvReader:
 		return self._env_def
 
 	def write_exception_report(self, report_file: str, delimiter: str = '\t') -> None:
-		if report_file is None:
-			return
 		self._logger.new_process_status(100, 'Reporting Exceptions.')
 		sql = 'SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT ' \
 			  'FROM SYS."VIEWS" V ' \

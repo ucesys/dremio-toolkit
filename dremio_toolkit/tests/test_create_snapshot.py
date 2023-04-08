@@ -34,7 +34,13 @@ def test_create_snapshot():
     test_dt = datetime.fromisoformat("2023-01-01")
 
     with tempfile.NamedTemporaryFile(mode='w') as tmp_file:  # open file
-        create_snapshot(env_api=env_api, logger=logger, output_file=tmp_file.name, datetime_utc=test_dt)
+        create_snapshot(
+            env_api=env_api, logger=logger, output_mode='FILE', output_path=tmp_file.name,
+            report_filename=None, report_delimiter='\n'
+        )
 
         assert os.path.isfile(tmp_file.name), "Snapshot does not exist"
-        assert json.load(open(tmp_file.name)) == expected_snapshot, "Snapshot is different than expected"
+
+        created_snapshot = json.load(open(tmp_file.name))
+        created_snapshot["data"]["dremio_environment"]["timestamp_utc"] = expected_snapshot["data"]["dremio_environment"]["timestamp_utc"]
+        assert created_snapshot == expected_snapshot, "Snapshot is different than expected"

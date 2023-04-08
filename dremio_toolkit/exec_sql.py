@@ -19,30 +19,24 @@
 import argparse
 from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_api import EnvApi
-from dremio_toolkit.env_reader import EnvReader
 from dremio_toolkit.logger import Logger
-from dremio_toolkit.env_file_writer import EnvFileWriter
+import os
+import json
 
 
 def parse_args():
+    # Process arguments
     arg_parser = argparse.ArgumentParser(
-        description='create_snapshot is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and '
-                    'saves the snapshot as a JSON file.',
+        description='create_snapshot is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and saves it as a JSON file.',
         epilog='Copyright UCE Systems Corp. For any assistance contact developer at dremio@ucesys.com'
     )
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
     arg_parser.add_argument("-p", "--password", help="User password.", required=True)
-    arg_parser.add_argument("-m", "--output-mode", help="Whether create a single output JSON file or a directory with "
-                                                        "individual files for each object.", required=False,
-                                                        choices=['FILE', 'DIR'], default='FILE')
-    arg_parser.add_argument("-o", "--output-path", help="Json file name or a directory name to save Dremio environment.", required=True)
-    arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the exception report.", required=False)
-    arg_parser.add_argument("-e", "--report-delimiter", help="Delimiter to use in the exception report. Default is tab.", required=False, default='\t')
+    arg_parser.add_argument("-s", "--sql-filename", help="File name with SQL code.", required=True)
+    arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the JSON exception' report.", required=False)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
-    arg_parser.add_argument("-v", "--verbose", help="Set Log to verbose to print object definitions instead of object IDs.",
-                            required=False, default=False, action='store_true')
     arg_parser.add_argument("-f", "--log-filename", help="Set Log to write to a specified file instead of STDOUT.",
                             required=False)
     parsed_args = arg_parser.parse_args()
@@ -51,14 +45,25 @@ def parse_args():
     return parsed_args
 
 
-def create_snapshot(env_api, logger, output_mode, output_path, report_filename, report_delimiter):
-    env_reader = EnvReader(env_api, logger)
-    env_def = env_reader.read_dremio_environment()
-
-    if report_filename is not None:
-        env_reader.write_exception_report(report_filename, report_delimiter)
-
-    EnvFileWriter.save_dremio_environment(env_def, output_mode, output_path, logger)
+def exec_sql(dremio_environment_url, user, password, sql_filename, report_filename, log_level, log_filename):
+    logger = Logger(level=log_level, log_file=log_filename)
+    with open(sql_filename, 'r') as f:
+        sql_code = f.read()
+    sql_commands = sql_code.split(';')
+    logger.new_process_status(len(sql_commands), 'Executing SQL. ')
+    env_api = EnvApi(dremio_environment_url, user, password, logger)
+    sql_statuses = []
+    for sql in sql_commands:
+        if sql:
+            status, jobid, job_result = env_api.execute_sql(sql)
+            sql_statuses.append({'sql': sql, 'jobid': jobid, 'job_result': job_result})
+        logger.print_process_status(increment=1)
+    # Produce execution report
+    if report_filename:
+        if os.path.isfile(report_filename):
+            os.remove(report_filename)
+        with open(report_filename, "w", encoding="utf-8") as f:
+            json.dump(sql_statuses, f, indent=4, sort_keys=True)
 
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
@@ -67,11 +72,6 @@ def create_snapshot(env_api, logger, output_mode, output_path, report_filename, 
 
 if __name__ == '__main__':
     args = parse_args()
+    exec_sql(args.dremio_environment_url, args.user, args.password, args.sql_filename,
+             args.report_filename, args.log_level, args.log_filename)
 
-    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_filename)
-    env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger)
-
-    create_snapshot(
-        env_api=env_api, logger=logger, output_mode=args.output_mode, output_path=args.output_path,
-        report_filename=args.report_filename, report_delimiter=args.report_delimiter
-    )

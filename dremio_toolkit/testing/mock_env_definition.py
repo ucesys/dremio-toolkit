@@ -22,39 +22,9 @@ from dremio_toolkit.env_definition import EnvDefinition
 
 
 def mock_env_definition() -> EnvDefinition:
-    return EnvDefinition(
-        containers=containers(),
-        homes=homes(),
-        spaces=spaces(),
-        sources=sources(),
-        reflections=reflections(),
-        rules=rules(),
-        queues=queues(),
-        folders=folders(),
-        vds_list=vds(),
-        tags=tags(),
-        wikis=wikis(),
-        referenced_users=referenced_users(),
-        referenced_roles=referenced_roles(),
-        endpoint="http://localhost:9047/",
-        votes=[],
-        files=[],
-        referenced_groups=[],
-    )
+    env_def = EnvDefinition()
 
-
-def containers() -> List[Dict[str, Any]]:
-    return [
-        {
-            "containerType": "HOME",
-            "createdAt": "2023-02-03T21:08:05.131Z",
-            "id": "4352b221-abcd-4ba9-a92d-b0dc1c2f36e4",
-            "path": [
-                "@user"
-            ],
-            "tag": "S10NS8HStag=",
-            "type": "CONTAINER"
-        },
+    env_def.containers = [
         {
             "containerType": "SPACE",
             "createdAt": "2023-02-03T21:36:29.932Z",
@@ -77,21 +47,7 @@ def containers() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def homes() -> List[Dict[str, Any]]:
-    return [
-        {
-            "children": [],
-            "entityType": "home",
-            "id": "4352b221-0aac-4ba9-a92d-b0dc1c2f36e4",
-            "name": "@user",
-            "tag": "S10NS8HSm9g="
-        }
-    ]
-
-
-def sources() -> Dict[str, Any]:
-    return [
+    env_def.sources = [
         {
             "accelerationGracePeriodMs": 10800000,
             "accelerationNeverExpire": False,
@@ -140,9 +96,7 @@ def sources() -> Dict[str, Any]:
         }
     ]
 
-
-def spaces() -> List[Dict[str, Any]]:
-    return [
+    env_def.spaces = [
         {
             "accessControlList": {
                 "roles": [
@@ -199,9 +153,7 @@ def spaces() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def folders() -> List[Dict[str, Any]]:
-    return [
+    env_def.folders = [
         {
             "accessControlList": {},
             "children": [
@@ -231,9 +183,7 @@ def folders() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def vds() -> List[Dict[str, Any]]:
-    return [
+    env_def.vds_list = [
         {
             "accessControlList": {},
             "createdAt": "2023-02-03T22:23:06.511Z",
@@ -295,9 +245,15 @@ def vds() -> List[Dict[str, Any]]:
         }
     ]
 
+    env_def.vds_parents = [
+        {
+            'id': '9a57f624-b607-4834-bc3d-76e00dcb55dd',
+            'parents': ['/path/to/dataset', '/other/path/to/dataset'],
+            'path': ['TestSpace', 'MyFolder', 'TaxiTrips']
+        }
+   ]
 
-def reflections() -> List[Dict[str, Any]]:
-    return [
+    env_def.reflections = [
         {
             "arrowCachingEnabled": False,
             "canAlter": True,
@@ -330,9 +286,7 @@ def reflections() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def queues() -> List[Dict[str, Any]]:
-    return [
+    env_def.queues = [
         {
             "cpuTier": "CRITICAL",
             "id": "4bfc8f5e-b255-4e73-9018-96c1e7f5b81f",
@@ -343,9 +297,7 @@ def queues() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def rules() -> List[Dict[str, Any]]:
-    return [
+    env_def.rules = [
         {
             "acceptId": "4bfc8f5e-b255-4e73-9018-96c1e7f5b81f",
             "acceptName": "UI Previews",
@@ -356,9 +308,7 @@ def rules() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def tags() -> List[Dict[str, Any]]:
-    return [
+    env_def.tags = [
         {
             "entity_id": "9a57f624-b607-4834-bc3d-76e00dcb55dd",
             "path": [
@@ -374,17 +324,8 @@ def tags() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def wikis() -> List[Dict[str, Any]]:
     wikis_text = "#  Wikis & Tags\n\n![Gnarly Catalog](https://d33wubrfki0l68.cloudfront.net/c1a54376c45a9276c080f3d10ed25ce61c17bcd2/2b946/img/home/open-source-for-everyone.svg)\n\nYou are reading the wiki for your home space! You can create and edit this information for any source, space, or folder.\n\nThis sidebar always shows the wiki for the current source, space or folder you are browsing.\n\nWhen previewing datasets, click on the `Catalog` tab to create a wiki or add tags to that dataset.\n\n**Tip:** You can hide the wiki by clicking on the sidebar icon on upper right hand side."
-
-    return [
-        {
-            "entity_id": "4352b221-0aac-4ba9-a92d-b0dc1c2f36e4",
-            "path": ["@user"],
-            "text": wikis_text,
-            "version": 0
-        },
+    env_def.wikis = [
         {
             "entity_id": "86b7f8ff-cdaa-455c-9d12-51ec0dbdcf4f",
             "path": ["TestSpace"],
@@ -411,9 +352,7 @@ def wikis() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def referenced_users() -> List[Dict[str, Any]]:
-    return [
+    env_def.referenced_users = [
         {
             "@type": "EnterpriseUser",
             "active": True,
@@ -434,9 +373,7 @@ def referenced_users() -> List[Dict[str, Any]]:
         }
     ]
 
-
-def referenced_roles() -> List[Dict[str, Any]]:
-    return [
+    env_def.referenced_roles = [
         {
             "description": "Predefined System Role",
             "id": "f71cfba5-e144-4090-883e-df878aca225e",
@@ -446,3 +383,11 @@ def referenced_roles() -> List[Dict[str, Any]]:
             "type": "SYSTEM"
         }
     ]
+
+    env_def.endpoint = "http://localhost:9047/"
+    env_def.file_version = "1.1"
+    env_def.endpoint = "http://localhost:9047/"
+    env_def.timestamp_utc = "2023-01-01 00:00:00"
+
+    return env_def
+

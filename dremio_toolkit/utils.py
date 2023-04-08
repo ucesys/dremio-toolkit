@@ -19,15 +19,21 @@
 
 class Utils:
 
+    NON_FATAL_EXIT_CODE = 2
+
     def __init__(self):
         return
 
     # Pop all items from container definition
     @staticmethod
     def pop_it(container, items):
-        for item in items:
-            if item in container:
-                container.pop(item)
+        if type(items) is list:
+            for item in items:
+                if item in container:
+                    container.pop(item)
+        else:
+            if items in container:
+                container.pop(items)
 
     # Appends a list if the item does not exist in the list yet
     @staticmethod
@@ -48,6 +54,25 @@ class Utils:
 
     @staticmethod
     def get_fully_qualified_path(path, sql_context):
+        path = Utils.get_str_path(path)
+        if '/' not in path and sql_context is not None and sql_context != "":
+            path = Utils.get_str_path(sql_context) + "/" + path
+        return path
+
+    @staticmethod
+    def get_sql_context(entity):
+        return entity["sqlContext"] if "sqlContext" in entity else None
+
+    @staticmethod
+    def is_vds(entity):
+        return entity['entityType'] == 'dataset' and entity['type'] == 'VIRTUAL_DATASET'
+
+    @staticmethod
+    def is_pds(entity):
+        return entity['entityType'] == 'dataset' and entity['type'] == 'PHYSICAL_DATASET'
+
+    @staticmethod
+    def get_absolute_path(path, sql_context):
         path = Utils.get_str_path(path)
         if '/' not in path and sql_context is not None and sql_context != "":
             path = Utils.get_str_path(sql_context) + "/" + path

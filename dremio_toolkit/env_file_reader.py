@@ -17,27 +17,38 @@
 #########################################################################
 
 import json
-
+import os
 from dremio_toolkit.env_definition import EnvDefinition
+from dremio_toolkit.env_file_writer import EnvFileWriter
 
 
 ###
 # This class uses DremioData object to update Dremio environment.
 ###
 class EnvFileReader:
+
     @staticmethod
-    def read_dremio_environment(filename: str):
+    def read_dremio_environment(input_mode: str, path: str):
+        if input_mode == 'FILE':
+            return EnvFileReader.read_dremio_environment_from_file(path)
+        else:
+            return EnvFileReader.read_dremio_environment_from_directory(path)
+
+    @staticmethod
+    def read_dremio_environment_from_file(filename: str):
         f = open(filename, "r", encoding="utf-8")
         data = json.load(f)['data']
         f.close()
         env_def = EnvDefinition()
         for item in data:
             if 'dremio_environment' in item:
-                pass
-            elif 'containers' in item:
-                env_def.containers = item['containers']
-            elif 'homes' in item:
-                env_def.homes = item['homes']
+                for env_item in item['dremio_environment']:
+                    if 'endpoint' in env_item:
+                        env_def.endpoint = env_item['endpoint']
+                    elif 'file_version' in env_item:
+                        env_def.file_version = env_item['file_version']
+                    elif 'timestamp_utc' in env_item:
+                        env_def.timestamp_utc = env_item['timestamp_utc']
             elif 'sources' in item:
                 env_def.sources = item['sources']
             elif 'spaces' in item:
@@ -46,6 +57,8 @@ class EnvFileReader:
                 env_def.folders = item['folders']
             elif 'vds' in item:
                 env_def.vds_list = item['vds']
+            elif 'vds_parents' in item:
+                env_def.vds_parents = item['vds_parents']
             elif 'reflections' in item:
                 env_def.reflections = item['reflections']
             elif 'referenced_users' in item:
@@ -77,3 +90,58 @@ class EnvFileReader:
             else:
                 pass
         return env_def
+
+    @staticmethod
+    def read_dremio_environment_from_directory(source_directory):
+        try:
+            env_def = EnvDefinition()
+            f = open(os.path.join(source_directory, EnvFileWriter.DREMIO_ENV_FILENAME), "r", encoding="utf-8")
+            dremio_environment = json.load(f)['dremio_environment']
+            for env_item in dremio_environment:
+                if 'endpoint' in env_item:
+                    env_def.endpoint = env_item['endpoint']
+                elif 'file_version' in env_item:
+                    env_def.file_version = env_item['file_version']
+                elif 'timestamp_utc' in env_item:
+                    env_def.timestamp_utc = env_item['timestamp_utc']
+            f.close()
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'containers'), env_def.containers, None, None)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'sources'), env_def.sources, None, None)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'spaces'), env_def.spaces, env_def.folders,
+                                             env_def.vds_list)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'reflections'), None, None,
+                                             env_def.reflections)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'rules'), None, None, env_def.rules)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'queues'), None, None, env_def.queues)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'tags'), None, None, env_def.tags)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'wikis'), None, None, env_def.wikis)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'referenced_users'), None, None,
+                                             env_def.referenced_users)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'referenced_groups'), None, None,
+                                             env_def.referenced_groups)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'referenced_roles'), None, None,
+                                             env_def.referenced_roles)
+            EnvFileReader._collect_directory(os.path.join(source_directory, 'vds_parents'), None, None,
+                                             env_def.vds_parents)
+        except OSError as e:
+            raise Exception("Error reading file. OS Error: " + e.strerror)
+        return env_def
+
+    @staticmethod
+    def _collect_directory(directory, container_list, folder_list, object_list):
+        for (dirpath, dirnames, filenames) in os.walk(directory):
+            for filename in filenames:
+                f = open(os.path.join(dirpath, filename), "r", encoding="utf-8")
+                data = json.load(f)
+                f.close()
+                if EnvFileWriter.CONTAINER_SELF_FILENAME == filename:
+                    # First level of dirpath is a container if container_list passed
+                    if container_list is None or (
+                            '/' in dirpath[len(directory) + 1:] or '\\' in dirpath[len(directory) + 1:]):
+                        if folder_list is not None:
+                            folder_list.append(data)
+                    else:
+                        container_list.append(data)
+                else:
+                    if object_list is not None:
+                        object_list.append(data)

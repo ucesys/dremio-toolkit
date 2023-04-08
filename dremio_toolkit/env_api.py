@@ -15,10 +15,12 @@
 #
 # Contact dremio@ucesys.com
 #########################################################################
+import json
 
 import requests
 import sys
 import urllib
+import time
 
 
 ###
@@ -86,16 +88,24 @@ class EnvApi:
 
     # Generate an authentication token and save it
     # https://docs.dremio.com/software/rest-api/#authentication
-    def _authenticate(self) -> None:
+    def _authenticate(self, admin=True) -> None:
         headers = {"Content-Type": "application/json"}
         payload = '{"userName": "' + self._username + '","password": "' + self._password + '"}'
         payload = payload.encode(encoding='utf-8')
         response = requests.request("POST", self._endpoint + self._login, data=payload,
                                     headers=headers, timeout=self._api_timeout, verify=self._verify_ssl)
         if response.status_code != 200:
-            self._logger.critical("Authentication Error " + str(response.status_code))
+            self._logger.fatal("Authentication Error " + str(response.status_code))
         self._token = '_dremio' + response.json()['token']
         self._headers = {"Content-Type": "application/json", "Authorization": self._token}
+        # User must be an Admin for most of the dremio-toolkit operations
+        if admin:
+            user = self.get_user_by_name(self._username)
+            user = self.get_user(user['id'])
+            for role in user['roles']:
+                if role['name'] == 'ADMIN':
+                    return
+            self._logger.fatal("Dremio user is not in ADMIN role.")
 
     # Lists all top-level catalog containers.
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog/
@@ -124,6 +134,9 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog-id-graph/
     def get_catalog_graph(self, catalog_id):
         return self._http_get(self._catalog + catalog_id + '/' + self._graph_postfix)
+
+    def get_username(self):
+        return self._username
 
     # Returns the information of a user by username
     # https://docs.dremio.com/software/rest-api/user/get-user-2/
@@ -269,12 +282,36 @@ class EnvApi:
     # Submits SQL for execution and returns Job ID or None. It does not wait for the query to execute.
     # https://docs.dremio.com/software/rest-api/sql/post-sql/
     def submit_sql(self, sql, sql_context=None):
-        payload = '{ "sql":"' + sql + '"' + ("" if sql_context is None else ', "context":"' + sql_context + '"') + ' }'
+        # clean up SQL code
+        sql = json.dumps(sql, indent=4)
+        payload = '{ "sql":' + sql + '' + ("" if sql_context is None else ', "context":"' + sql_context + '"') + ' }'
+
         result = self._http_post(self._sql, payload, as_json=False)
         if result is not None:
             return result["id"]
         else:
             return None
+
+    # Executes SQL and returns Job ID and Execution Status. It waits for the query to execute.
+    # Returns status, jobid, job_result
+    # https://docs.dremio.com/software/rest-api/sql/post-sql/
+    def execute_sql(self, sql, sql_context=None, timeout=None):
+        jobid = self.submit_sql(sql, sql_context)
+        if jobid is None:
+            return False, None, None
+        # Wait for job to complete
+        process_time = 0
+        while timeout is None or process_time < timeout:
+            job_info = self.get_job_info(jobid)
+            if job_info is None:
+                return False, None, None
+            elif job_info["jobState"] in ['COMPLETED']:
+                return True, jobid, self.get_job_result(jobid)
+            elif job_info["jobState"] in ['CANCELED', 'FAILED']:
+                return False, jobid, self.get_job_result(jobid)
+            time.sleep(1)
+            process_time += 1
+        return False, None, None
 
     # Returns information for a job specified by ID
     # https://docs.dremio.com/software/rest-api/job/
@@ -335,8 +372,8 @@ class EnvApi:
                 # Try to re-authenticate once since the token might expire
                 if not re_authenticate:
                     return self._http_get(url, True)
-                self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response))
+                self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
+                                   " for : <" + str(url) + ">" + self._get_error_message(response))
                 raise RuntimeError(self._get_error_message(response))
             else:
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
@@ -376,27 +413,27 @@ class EnvApi:
                 return None
             elif response.status_code == 400:
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
-                                   " for : <" + str(url) + ">" + self._get_error_message(response))
+                                   " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
             elif response.status_code == 401 or response.status_code == 403:
                 # Try to re-authenticate since the token might expire
                 if not re_authenticate:
                     return self._http_post(url, json_data, as_json, False)
-                self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response))
+                self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
+                                   " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
                 raise RuntimeError(self._get_error_message(response))
             elif response.status_code == 409:  # Already exists.
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
-                                   " for : <" + str(url) + ">" + self._get_error_message(response))
+                                   " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
             elif response.status_code == 404:  # Not found
                 self._logger.info("Received HTTP Response Code " + str(response.status_code) +
-                                  " for : <" + str(url) + ">" + self._get_error_message(response))
+                                  " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
             else:
                 self._logger.error("Received HTTP Response Code " + str(response.status_code) +
-                                   " for : <" + str(url) + ">" + self._get_error_message(response))
+                                   " for : <" + str(url) + ">" + self._get_error_message(response), catalog=json_data)
             return None
         except requests.exceptions.Timeout:
             # This situation might happen when an underlying object (file system eg) is not responding
-            self._logger.error("HTTP Request Timed-out: " + " <" + str(url) + ">")
+            self._logger.error("HTTP Request Timed-out: " + " <" + str(url) + ">", catalog=json_data)
             return None
 
     # Executes HTTP PUT. Returns JSON if success or None
@@ -414,9 +451,9 @@ class EnvApi:
             elif response.status_code == 401 or response.status_code == 403:
                 # Try to re-authenticate since the token might expire
                 if not re_authenticate:
-                    return self._http_put(url, json_data, False)
-                self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response))
+                    return self._http_put(url, json_data, True)
+                self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
+                                   " for : <" + str(url) + ">" + self._get_error_message(response))
                 raise RuntimeError(self._get_error_message(response))
             elif response.status_code == 409:  # A catalog catalog with the specified path already exists.
                 self._logger.error("Received HTTP Response Code 409 for : <" + str(url) + ">" +
@@ -454,8 +491,8 @@ class EnvApi:
                 # Try to re-authenticate since the token might expire
                 if not re_authenticate:
                     return self._http_delete(url, False)
-                self._logger.critical("Received HTTP Response Code " + str(response.status_code) +
-                                      " for : <" + str(url) + ">" + self._get_error_message(response))
+                self._logger.fatal("Received HTTP Response Code " + str(response.status_code) +
+                                   " for : <" + str(url) + ">" + self._get_error_message(response))
                 raise RuntimeError(self._get_error_message(response))
             elif response.status_code == 409:  # A catalog catalog with the specified path already exists.
                 self._logger.error("Received HTTP Response Code 409 for : <" + str(url) + ">" +
@@ -480,6 +517,8 @@ class EnvApi:
             if 'moreInfo' in response.json():
                 message = message + " moreInfo: " + str(response.json()['moreInfo'])
         except:
+            pass
+        finally:
             message = message + " content: " + str(response.content)
         return message
 

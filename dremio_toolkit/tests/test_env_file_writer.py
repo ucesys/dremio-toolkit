@@ -18,21 +18,20 @@
 
 import json
 import os
-from datetime import datetime
 import tempfile
 
 from dremio_toolkit.env_file_writer import EnvFileWriter
 from dremio_toolkit.testing.mock_env_definition import mock_env_definition
 from dremio_toolkit.testing.utils import load_snapshot
+from dremio_toolkit.logger import Logger
 
 
 def test_env_file_writer():
     env_def = mock_env_definition()
     expected_snapshot = load_snapshot()
-    test_dt = datetime.fromisoformat("2023-01-01")
 
     with tempfile.NamedTemporaryFile(mode='w') as tmp_file:
-        EnvFileWriter.save_dremio_environment(env_def, tmp_file.name, test_dt)
+        EnvFileWriter.save_dremio_environment(env_def, 'FILE', tmp_file.name, Logger(level="WARN", verbose=False))
 
         assert os.path.isfile(tmp_file.name), "Snapshot does not exist"
         assert json.load(open(tmp_file.name)) == expected_snapshot, "Snapshot is different than expected"

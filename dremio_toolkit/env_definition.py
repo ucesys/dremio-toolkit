@@ -17,42 +17,27 @@
 #########################################################################
 
 
+# Data Class to contain definition of Dremio Environment
 class EnvDefinition:
-    containers: list
-    homes: list
-    sources: list
-    spaces: list
-    folders: list
-    vds_list: list
-    reflections: list
-    rules: list
-    queues: list
-    votes: list
-    files: list
-    tags: list
-    wikis: list
-    referenced_users: list
-    referenced_groups: list
-    referenced_roles: list
-    endpoint: str
+    def __init__(self):
+        self.containers = []
+        self.sources = []
+        self.spaces = []
+        self.folders = []
+        self.vds_list = []
+        self.vds_parents = []
+        self.reflections = []
+        self.rules = []
+        self.queues = []
+        self.votes = []
+        self.files = []
+        self.tags = []
+        self.wikis = []
+        self.referenced_users = []
+        self.referenced_groups = []
+        self.referenced_roles = []
+        # dremio_environment
+        self.file_version = None
+        self.endpoint = None
+        self.timestamp_utc = None
 
-    def __init__(self, containers,
-                 homes, spaces, sources, folders, vds_list, reflections, rules, queues, votes, endpoint, tags,
-                 wikis, referenced_users, referenced_groups, referenced_roles, files):
-        self.containers = containers
-        self.homes = homes
-        self.sources = sources
-        self.spaces = spaces
-        self.folders = folders
-        self.vds_list = vds_list
-        self.reflections = reflections
-        self.rules = rules
-        self.queues = queues
-        self.votes = votes
-        self.files = files
-        self.tags = tags
-        self.wikis = wikis
-        self.referenced_users = referenced_users
-        self.referenced_groups = referenced_groups
-        self.referenced_roles = referenced_roles
-        self.endpoint = endpoint

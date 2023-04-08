@@ -25,16 +25,6 @@ def mock_env_definition() -> EnvDefinition:
     env_def = EnvDefinition()
     env_def.containers = [
         {
-            "containerType": "HOME",
-            "createdAt": "2023-02-03T21:08:05.131Z",
-            "id": "4352b221-abcd-4ba9-a92d-b0dc1c2f36e4",
-            "path": [
-                "@user"
-            ],
-            "tag": "S10NS8HStag=",
-            "type": "CONTAINER"
-        },
-        {
             "containerType": "SPACE",
             "createdAt": "2023-02-03T21:36:29.932Z",
             "id": "86b7f8ff-cdaa-455c-9d12-51ec0dbdcf4f",
@@ -53,15 +43,6 @@ def mock_env_definition() -> EnvDefinition:
             ],
             "tag": "JDLrVceDJ68=",
             "type": "CONTAINER"
-        }
-    ]
-    env_def.homes = [
-        {
-            "children": [],
-            "entityType": "home",
-            "id": "4352b221-0aac-4ba9-a92d-b0dc1c2f36e4",
-            "name": "@user",
-            "tag": "S10NS8HSm9g="
         }
     ]
     env_def.sources = [
@@ -197,7 +178,7 @@ def mock_env_definition() -> EnvDefinition:
             "tag": "kad/yd+PUUU="
         }
     ]
-    env_def.vds = [
+    env_def.vds_list = [
         {
             "accessControlList": {},
             "createdAt": "2023-02-03T22:23:06.511Z",
@@ -258,6 +239,13 @@ def mock_env_definition() -> EnvDefinition:
             "type": "VIRTUAL_DATASET"
         }
     ]
+    env_def.vds_parents = [
+        {
+            'id': '9a57f624-b607-4834-bc3d-76e00dcb55dd',
+            'parents': ['/path/to/dataset', '/other/path/to/dataset'],
+            'path': ['TestSpace', 'MyFolder', 'TaxiTrips']
+        }
+   ]
     env_def.reflections = [
         {
             "arrowCachingEnabled": False,
@@ -327,12 +315,6 @@ def mock_env_definition() -> EnvDefinition:
     ]
     wikis_text = "#  Wikis & Tags\n\n![Gnarly Catalog](https://d33wubrfki0l68.cloudfront.net/c1a54376c45a9276c080f3d10ed25ce61c17bcd2/2b946/img/home/open-source-for-everyone.svg)\n\nYou are reading the wiki for your home space! You can create and edit this information for any source, space, or folder.\n\nThis sidebar always shows the wiki for the current source, space or folder you are browsing.\n\nWhen previewing datasets, click on the `Catalog` tab to create a wiki or add tags to that dataset.\n\n**Tip:** You can hide the wiki by clicking on the sidebar icon on upper right hand side."
     env_def.wikis = [
-        {
-            "entity_id": "4352b221-0aac-4ba9-a92d-b0dc1c2f36e4",
-            "path": ["@user"],
-            "text": wikis_text,
-            "version": 0
-        },
         {
             "entity_id": "86b7f8ff-cdaa-455c-9d12-51ec0dbdcf4f",
             "path": ["TestSpace"],

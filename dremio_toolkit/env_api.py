@@ -292,8 +292,8 @@ class EnvApi:
         else:
             return None
 
-    # Executes SQL and returns Job ID and Execution Status. It waits for the query to execute.
-    # Returns status, jobid, job_result
+    # Executes SQL and returns Job ID and Execution Status. It waits for the query to complete execution.
+    # Returns success_status, jobid, job_result
     # https://docs.dremio.com/software/rest-api/sql/post-sql/
     def execute_sql(self, sql, sql_context=None, timeout=None):
         jobid = self.submit_sql(sql, sql_context)

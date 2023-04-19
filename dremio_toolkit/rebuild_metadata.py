@@ -79,7 +79,7 @@ def rebuild_metadata(dremio_environment_url, user, password, datasource, concurr
         if thread.get_status():
             job_statuses.append({'pds': thread.get_pds_path(),
                                  'job_id': thread.get_job_id(),
-                                 'success': thread.get_status(),
+                                 'pds_rebuild_status': 'SUCCESS' if thread.get_status() else 'FAILED',
                                  'forget_job_info': thread.get_forget_job_info(),
                                  'refresh_job_info': thread.get_refresh_job_info()})
 

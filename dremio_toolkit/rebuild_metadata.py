@@ -49,7 +49,7 @@ def parse_args():
     if parsed_args.root_point is None:
         print("root-point argument has not been specified. Metadata for all physical datasets in all data sources will be rebuilt.")
     if int(parsed_args.concurrency) > 4:
-        print("Specifying concurrency higher than 4 without setting dremio.iceberg.enabled to True may impact Dremio performance and potentically bring Dremio cluster down.")
+        print("Specifying concurrency higher than 4 without setting dremio.iceberg.enabled to True may impact Dremio performance and potentially bring Dremio cluster down.")
     return parsed_args
 
 
@@ -109,7 +109,8 @@ def get_pds_list(env_api, root_point) -> list:
         job_result = env_api.get_job_result(jobid, limit * i, limit)
         if job_result is not None:
             for row in job_result['rows']:
-                pds_list.append(row['TABLE_SCHEMA'] + '.' + row['TABLE_NAME'])
+                table_fqn = '"' + row['TABLE_SCHEMA'].replace('.', '"."') + '"."' + row['TABLE_NAME'] + '"'
+                pds_list.append(table_fqn)
     return pds_list
 
 

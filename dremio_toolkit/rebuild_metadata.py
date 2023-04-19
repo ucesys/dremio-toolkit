@@ -36,7 +36,7 @@ def parse_args():
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
     arg_parser.add_argument("-p", "--password", help="User password.", required=True)
-    arg_parser.add_argument("-t", "--root-point", help="Limits the scope of metadata refresh to physical datasets under the 'root point' hierarchy. The utility will refresh metadata for all physical datasets in all datasources if this argument is not set", required=False)
+    arg_parser.add_argument("-t", "--root-point", help="Limits the scope of metadata refresh to physical datasets under the 'root point' hierarchy. The utility will refresh metadata for all physical datasets in all datasources if this argument is not set.", required=False)
     arg_parser.add_argument("-c", "--concurrency", help="Concurrency for executing metadata refresh. It is not recommended to set it higher than 4 if dremio.iceberg.enabled is not set to True. Default concurrency is 1.", required=False, default=1)
     arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the JSON exception' report.", required=False)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",

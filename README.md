@@ -111,7 +111,7 @@ This command forces Dremio to forget and then refresh metadata for all or select
 
 ### Syntax
 ```commandline
-PYTHONPATH=./ python dremio_toolkit/rebuild_metadata.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -t <ROOT_POINT> -c <CONCURRENCY> -r <REPORT_FILE>
+PYTHONPATH=./ python dremio_toolkit/rebuild_metadata.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -s <DATASOURCE> -c <CONCURRENCY> -r <REPORT_FILE>
 ```
  
 ### Arguments
@@ -119,7 +119,7 @@ PYTHONPATH=./ python dremio_toolkit/rebuild_metadata.py -d <DREMIO_HOST>:<DREMIO
     -d or --dremio-environment-url : URL to Dremio environment.
     -u or --user : User name. User must be a Dremio admin.
     -p or --password : User password.
-    -t or --root-point : Limits the scope of the metadata refresh to physical datasets under the 'root point' hierarchy. If not specified, metadata for all physical datasets in all datasources will be refreshed.
+    -s or --datasource : Limits the scope of the metadata refresh to physical datasets in a specified datasource. If not specified, metadata for all physical datasets in all datasources will be refreshed.
     -c or --concurrency : Concurrency for executing metadata refresh. It is not recommended to set it higher than 4 if dremio.iceberg.enabled is not set to True. Default concurrency is 1.
     -r or --report-filename : File name for the JSON report.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.

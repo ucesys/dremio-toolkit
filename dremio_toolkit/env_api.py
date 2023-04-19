@@ -293,7 +293,7 @@ class EnvApi:
             return None
 
     # Executes SQL and returns Job ID and Execution Status. It waits for the query to complete execution.
-    # Returns success_status, jobid, job_result
+    # Returns success_status, jobid, job_info
     # https://docs.dremio.com/software/rest-api/sql/post-sql/
     def execute_sql(self, sql, sql_context=None, timeout=None):
         jobid = self.submit_sql(sql, sql_context)
@@ -306,9 +306,9 @@ class EnvApi:
             if job_info is None:
                 return False, None, None
             elif job_info["jobState"] in ['COMPLETED']:
-                return True, jobid, self.get_job_result(jobid)
+                return True, jobid, job_info
             elif job_info["jobState"] in ['CANCELED', 'FAILED']:
-                return False, jobid, self.get_job_result(jobid)
+                return False, jobid, job_info
             time.sleep(1)
             process_time += 1
         return False, None, None

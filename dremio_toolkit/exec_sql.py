@@ -55,8 +55,9 @@ def exec_sql(dremio_environment_url, user, password, sql_filename, report_filena
     sql_statuses = []
     for sql in sql_commands:
         if sql:
-            status, jobid, job_result = env_api.execute_sql(sql)
-            sql_statuses.append({'sql': sql, 'jobid': jobid, 'job_result': job_result})
+            status, jobid, job_info = env_api.execute_sql(sql)
+            job_result = env_api.get_job_result(jobid)
+            sql_statuses.append({'sql': sql, 'jobid': jobid, 'job_info': job_info, 'job_result': job_result})
         logger.print_process_status(increment=1)
     # Produce execution report
     if report_filename:

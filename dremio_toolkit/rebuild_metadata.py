@@ -79,8 +79,8 @@ def rebuild_metadata(dremio_environment_url, user, password, root_point, concurr
         if thread.get_status():
             job_statuses.append({'pds': thread.get_pds_path(),
                                  'success': thread.get_status(),
-                                 'forget_job_result': thread.get_forget_job_results(),
-                                 'refresh_job_result': thread.get_refresh_job_results()})
+                                 'forget_job_info': thread.get_forget_job_info(),
+                                 'refresh_job_info': thread.get_refresh_job_info()})
 
     # Produce execution report
     if report_filename:

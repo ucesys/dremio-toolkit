@@ -29,11 +29,13 @@ class RebuildMetadataThread(threading.Thread):
         self._env_api = env_api
         self._pds_path = pds_path
         self._status = None
+        self._job_id = None
         self._forget_job_info = None
         self._refresh_job_info = None
 
     def run(self):
         success, jobid, job_info = self._env_api.execute_sql('ALTER PDS ' + self._pds_path + ' FORGET METADATA')
+        self._job_id = jobid
         self._forget_job_info = job_info
         if success:
             success, jobid, job_info = self._env_api.execute_sql('ALTER PDS ' + self._pds_path + ' REFRESH METADATA AUTO PROMOTION')
@@ -42,6 +44,9 @@ class RebuildMetadataThread(threading.Thread):
             self._logger.error('Unable to ALTER PDS. ' + str(job_info))
         self._status = success
         self._logger.print_process_status(increment=1)
+
+    def get_job_id(self):
+        return self._job_id
 
     def get_pds_path(self):
         return self._pds_path

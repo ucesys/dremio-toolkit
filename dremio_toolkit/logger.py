@@ -24,14 +24,6 @@ from dremio_toolkit.utils import Utils
 class Logger:
     # Configuration
     _LEVELS = {'ERROR': 40, 'WARN': 30, 'WARNING': 30, 'INFO': 20, 'DEBUG': 10}
-    _max_errors = 0
-    _verbose = False
-    _root_logger = None
-
-    # Error counter
-    _error_count = 0
-
-    _last_error_message = ''
 
     # Status print
     _process_prefix_text = ''
@@ -44,9 +36,11 @@ class Logger:
             level = self._LEVELS[level]
         self._root_logger = logging.getLogger('root')
         self._root_logger.setLevel(level)
+        self._error_count = 0
         self._max_errors = max_errors
         self._verbose = verbose
         self._process_start_time = datetime.now()
+        self._last_error_message = ''
         if log_file:
             print('Logger will write to file: ' + log_file)
             logging.basicConfig(handlers=[logging.FileHandler(filename=log_file, encoding='utf-8', mode='a+')])

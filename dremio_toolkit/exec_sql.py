@@ -27,7 +27,7 @@ import json
 def parse_args():
     # Process arguments
     arg_parser = argparse.ArgumentParser(
-        description='exec_sql is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and saves it as a JSON file.',
+        description='exec_sql is a part of the Dremio Toolkit. Executes SQL code SQL code from a specified file. The file can contain a number of SQL commands which can be separated with ";".',
         epilog='Copyright UCE Systems Corp. For any assistance contact developer at dremio@ucesys.com'
     )
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)

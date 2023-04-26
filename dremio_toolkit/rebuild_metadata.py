@@ -26,6 +26,7 @@ from dremio_toolkit.logger import Logger
 from dremio_toolkit.rebuild_metadata_thread import RebuildMetadataThread
 import threading
 
+MAX_ROWS_PER_PAGE = 100
 
 def parse_args():
     # Process arguments
@@ -78,7 +79,8 @@ def rebuild_metadata(dremio_environment_url, user, password, datasource, concurr
             thread.join()
         if thread.get_status():
             job_statuses.append({'pds': thread.get_pds_path(),
-                                 'job_id': thread.get_job_id(),
+                                 'forget_job_id': thread.get_forget_job_id(),
+                                 'refresh_job_id': thread.get_refresh_job_id(),
                                  'pds_rebuild_status': 'SUCCESS' if thread.get_status() else 'FAILED',
                                  'forget_job_info': thread.get_forget_job_info(),
                                  'refresh_job_info': thread.get_refresh_job_info()})
@@ -104,10 +106,10 @@ def get_pds_list(env_api, datasource) -> list:
     if not status:
         return None
     num_rows = int(job_result['rowCount'])
-    # Page through the results, 100 rows per page
-    limit = 100
+    # Page through the results, MAX_ROWS_PER_PAGE rows per page
+    limit = MAX_ROWS_PER_PAGE
     pds_list = []
-    for i in range(0, int(num_rows / limit) + 1):
+    for i in range(int(num_rows / limit) + 1):
         job_result = env_api.get_job_result(jobid, limit * i, limit)
         if job_result is not None:
             for row in job_result['rows']:

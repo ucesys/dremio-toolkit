@@ -292,8 +292,8 @@ class EnvApi:
         else:
             return None
 
-    # Executes SQL and returns Job ID and Execution Status. It waits for the query to execute.
-    # Returns status, jobid, job_result
+    # Executes SQL and returns Job ID and Execution Status. It waits for the query to complete execution.
+    # Returns success_status, jobid, job_info
     # https://docs.dremio.com/software/rest-api/sql/post-sql/
     def execute_sql(self, sql, sql_context=None, timeout=None):
         jobid = self.submit_sql(sql, sql_context)
@@ -306,9 +306,9 @@ class EnvApi:
             if job_info is None:
                 return False, None, None
             elif job_info["jobState"] in ['COMPLETED']:
-                return True, jobid, self.get_job_result(jobid)
+                return True, jobid, job_info
             elif job_info["jobState"] in ['CANCELED', 'FAILED']:
-                return False, jobid, self.get_job_result(jobid)
+                return False, jobid, job_info
             time.sleep(1)
             process_time += 1
         return False, None, None
@@ -338,6 +338,35 @@ class EnvApi:
             self._logger.warning("Dry Run: not deleting catalog.")
         else:
             return self._http_delete(self._catalog + entity_id)
+
+    # Retrieves configuration for supplied option name
+    def get_sys_option(self, option_name: str):
+        sql = 'select * from sys.options where "name" = \'' + option_name + '\''
+        status, jobid, job_result = self.execute_sql(sql)
+        if not status:
+            return None
+        num_rows = int(job_result['rowCount'])
+        if num_rows > 1:
+            self._logger.error("get_option received " + str(num_rows) + " records. Expected exactly 1. Option name: " + option_name)
+            return None
+        elif num_rows == 0:
+            self._logger.error("Invalid option: " + option_name)
+            return None
+        job_result = self.get_job_result(jobid)
+        if job_result is not None:
+            row = job_result['rows'][0]
+            option_type = row['kind']
+            option_status = row['status']
+            if option_type == 'BOOLEAN':
+                return bool(row['bool_val']), bool, option_status
+            elif option_type == 'STRING':
+                return str(row['string_val']), str, option_status
+            elif option_type == 'DOUBLE':
+                return float(row['float_val']), float, option_status
+            elif option_type == 'LONG':
+                return float(row['num_val']), float, option_status
+        self._logger.error("Unexpected option type: " + option_type + ' for option: ' + option_name)
+        return None, None, None
 
     # Executes HTTP GET. Returns JSON if success or None
     def _http_get(self, url, re_authenticate=False):

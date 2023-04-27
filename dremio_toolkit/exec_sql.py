@@ -27,7 +27,7 @@ import json
 def parse_args():
     # Process arguments
     arg_parser = argparse.ArgumentParser(
-        description='create_snapshot is a part of the Dremio Toolkit. It reads a Dremio enviroment via API and saves it as a JSON file.',
+        description='exec_sql is a part of the Dremio Toolkit. Executes SQL code SQL code from a specified file. The file can contain a number of SQL commands which can be separated with ";".',
         epilog='Copyright UCE Systems Corp. For any assistance contact developer at dremio@ucesys.com'
     )
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
@@ -55,8 +55,9 @@ def exec_sql(dremio_environment_url, user, password, sql_filename, report_filena
     sql_statuses = []
     for sql in sql_commands:
         if sql:
-            status, jobid, job_result = env_api.execute_sql(sql)
-            sql_statuses.append({'sql': sql, 'jobid': jobid, 'job_result': job_result})
+            status, jobid, job_info = env_api.execute_sql(sql)
+            job_result = env_api.get_job_result(jobid)
+            sql_statuses.append({'sql': sql, 'jobid': jobid, 'job_info': job_info, 'job_result': job_result})
         logger.print_process_status(increment=1)
     # Produce execution report
     if report_filename:

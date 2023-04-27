@@ -49,8 +49,6 @@ def parse_args():
         print("report-filename argument has not been specified. Exception report will not be produced.")
     if parsed_args.datasource is None:
         print("datasource argument has not been specified. Metadata for all physical datasets in all data sources will be rebuilt.")
-    if int(parsed_args.concurrency) > 4:
-        print("Specifying concurrency higher than 4 without setting dremio.iceberg.enabled to True may impact Dremio performance and potentially bring Dremio cluster down.")
     return parsed_args
 
 
@@ -58,9 +56,16 @@ def rebuild_metadata(dremio_environment_url, user, password, datasource, concurr
     logger = Logger(level=log_level, log_file=log_filename)
     logger.new_process_status(1, 'Retrieving list of PDS for rebuilding metadata ...')
     env_api = EnvApi(dremio_environment_url, user, password, logger)
+    # Validate the Dremio environment can scale metadata refresh
+    if concurrency > 4:
+        iceberg_enabled, option_type, option_status = env_api.get_sys_option('dremio.iceberg.enabled')
+        if not iceberg_enabled:
+            print("Specifying concurrency higher than 4 without setting dremio.iceberg.enabled to True may impact Dremio performance and stability.")
     pds_list = get_pds_list(env_api, datasource)
     if pds_list is None:
         logger.fatal("Unable to retrieve list of PDS. ")
+    if len(pds_list) == 0:
+        print("\nNo PDS found in the specified scope. Nothing to do.")
     logger.new_process_status(len(pds_list), 'Rebuilding metadata. ')
     base_threads_count = threading.activeCount()
     threads = []

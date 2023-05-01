@@ -35,7 +35,8 @@ PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_
     -d or --dremio-environment-url : URL to Dremio environment.
     -u or --user : Dremio user name. User must be a Dremio admin.
     -p or --password : Dremio user password.
-    -o or --output-filename : Json file name to save Dremio environment.
+    -m or --output-mode : Whether create a single output JSON file or a directory with individual files for each object.
+    -o or --output-path : Json file name or a directory name to save Dremio environment.
     -r or --report-filename : File name for the tab delimited exception report report.
     -e or --report-delimiter : Delimiter to use in the exception report. Default is tab.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
@@ -57,7 +58,8 @@ PYTHONPATH=./ python dremio_toolkit/push_snapshot.py -d <DREMIO_HOST>:<DREMIO_PO
     -d or --dremio-environment-url : URL to Dremio environment.
     -u or --user : User name. User must be a Dremio admin.
     -p or --password : User password.
-    -i or --input-filename : Json file name with snapshot of Dremio environment.
+    -m or --output-mode : Whether create a single output JSON file or a directory with individual files for each object.
+    -i or --input-path : Json file name or a directory name with a snapshot of a Dremio environment.
     -y or --dry-run : Whether it's a dry run or changes should be made to the target.
     -r or --report-filename : File name for the tab delimited exception' report.
     -e or --report-delimiter : Delimiter to use in the exception report. Default is tab.

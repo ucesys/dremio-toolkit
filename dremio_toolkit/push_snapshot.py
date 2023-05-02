@@ -38,7 +38,7 @@ def parse_args():
                             "individual files for each object.", required=False, choices=['FILE', 'DIR'], default='FILE')
     arg_parser.add_argument("-i", "--input-path", help="Json file name or a directory name with a snapshot of a Dremio environment.", required=True)
     arg_parser.add_argument("-y", "--dry-run", help="Whether it's a dry run or changes should be made to the target "
-                                                    "Dremio environment.", required=False, default=False)
+                                                    "Dremio environment.", required=False, default=False, action='store_true')
     arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the exception' report.", required=False)
     arg_parser.add_argument("-e", "--report-delimiter", help="Delimiter to use in the exception report. Default is tab.",
                             required=False, default='\t')
@@ -73,6 +73,6 @@ def push_snapshot(input_mode, input_path, dremio_environment_url, user, password
 
 if __name__ == '__main__':
     args = parse_args()
-    push_snapshot(args.input_mode, args.input_path, args.dremio_environment_url, args.user, args.password, args.dry_run,
+    push_snapshot(args.input_mode, args.input_path, args.dremio_environment_url, args.user, args.password, bool(args.dry_run),
                     args.report_filename, args.report_delimiter, args.log_level, args.log_filename, args.verbose)
 

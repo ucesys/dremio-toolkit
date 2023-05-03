@@ -44,13 +44,13 @@ class EnvFileWriter:
             os.remove(output_file)
 
         env_snapshot = {
-            "data": {
-                'dremio_environment': {
-                    'file_version': EnvFileWriter.DREMIO_ENV_FILE_VERSION,
-                    "endpoint": env_def.endpoint,
-                    'timestamp_utc':
-                        str(datetime.utcnow()) if env_def.timestamp_utc is None else env_def.timestamp_utc
-                },
+            'data': {
+                'dremio_environment': [
+                    {'file_version': EnvFileWriter.DREMIO_ENV_FILE_VERSION},
+                    {'endpoint': env_def.endpoint},
+                    {'timestamp_utc':
+                        str(datetime.utcnow()) if env_def.timestamp_utc is None else env_def.timestamp_utc}
+                ],
                 'sources': env_def.sources,
                 'spaces': env_def.spaces,
                 'folders': env_def.folders,

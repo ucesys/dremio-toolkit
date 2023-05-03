@@ -40,55 +40,44 @@ class EnvFileReader:
         data = json.load(f)['data']
         f.close()
         env_def = EnvDefinition()
-        for item in data:
-            if 'dremio_environment' in item:
-                for env_item in item['dremio_environment']:
-                    if 'endpoint' in env_item:
-                        env_def.endpoint = env_item['endpoint']
-                    elif 'file_version' in env_item:
-                        env_def.file_version = env_item['file_version']
-                    elif 'timestamp_utc' in env_item:
-                        env_def.timestamp_utc = env_item['timestamp_utc']
-            elif 'sources' in item:
-                env_def.sources = item['sources']
-            elif 'spaces' in item:
-                env_def.spaces = item['spaces']
-            elif 'folders' in item:
-                env_def.folders = item['folders']
-            elif 'vds' in item:
-                env_def.vds_list = item['vds']
-            elif 'vds_parents' in item:
-                env_def.vds_parents = item['vds_parents']
-            elif 'reflections' in item:
-                env_def.reflections = item['reflections']
-            elif 'referenced_users' in item:
-                env_def.referenced_users = item['referenced_users']
-            elif 'referenced_groups' in item:
-                env_def.referenced_groups = item['referenced_groups']
-            elif 'referenced_roles' in item:
-                env_def.referenced_roles = item['referenced_roles']
-            elif 'queues' in item:
-                env_def.queues = item['queues']
-            elif 'rules' in item:
-                env_def.rules = item['rules']
-            elif 'tags' in item:
-                env_def.tags = item['tags']
-            elif 'wikis' in item:
-                env_def.wikis = item['wikis']
-            elif 'votes' in item:
-                env_def.votes = item['votes']
-            elif 'vds_parents' in item:
-                env_def.vds_parents = item['vds_parents']
-            elif 'pds' in item:
-                pass
-            elif 'files' in item:
-                pass
-            elif 'vds_parents' in item:
-                pass
-            elif 'dremio_get_config' in item:
-                pass
-            else:
-                pass
+        if 'dremio_environment' in data:
+            for env_item in data['dremio_environment']:
+                if 'endpoint' in env_item:
+                    env_def.endpoint = env_item['endpoint']
+                elif 'file_version' in env_item:
+                    env_def.file_version = env_item['file_version']
+                elif 'timestamp_utc' in env_item:
+                    env_def.timestamp_utc = env_item['timestamp_utc']
+        if 'sources' in data:
+            env_def.sources = data['sources']
+        if 'spaces' in data:
+            env_def.spaces = data['spaces']
+        if 'folders' in data:
+            env_def.folders = data['folders']
+        if 'vds' in data:
+            env_def.vds_list = data['vds']
+        if 'vds_parents' in data:
+            env_def.vds_parents = data['vds_parents']
+        if 'reflections' in data:
+            env_def.reflections = data['reflections']
+        if 'referenced_users' in data:
+            env_def.referenced_users = data['referenced_users']
+        if 'referenced_groups' in data:
+            env_def.referenced_groups = data['referenced_groups']
+        if 'referenced_roles' in data:
+            env_def.referenced_roles = data['referenced_roles']
+        if 'queues' in data:
+            env_def.queues = data['queues']
+        if 'rules' in data:
+            env_def.rules = data['rules']
+        if 'tags' in data:
+            env_def.tags = data['tags']
+        if 'wikis' in data:
+            env_def.wikis = data['wikis']
+        if 'votes' in data:
+            env_def.votes = data['votes']
+        if 'vds_parents' in data:
+            env_def.vds_parents = data['vds_parents']
         return env_def
 
     @staticmethod

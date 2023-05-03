@@ -34,8 +34,8 @@ def parse_args():
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
     arg_parser.add_argument("-p", "--password", help="User password.", required=True)
-    arg_parser.add_argument("-m", "--input-mode", help="Whether read a single inout JSON file or a directory with "
-                            "individual files for each object.", required=False, choices=['FILE', 'DIR'], default='FILE')
+    arg_parser.add_argument("-m", "--input-mode", help="FILE, default, will read from a single JSON file, DIR will read "
+                                                       "from a directory with individual files for each object.", required=False, choices=['FILE', 'DIR'], default='FILE')
     arg_parser.add_argument("-i", "--input-path", help="Json file name or a directory name with a snapshot of a Dremio environment.", required=True)
     arg_parser.add_argument("-y", "--dry-run", help="Whether it's a dry run or changes should be made to the target "
                                                     "Dremio environment.", required=False, default=False, action='store_true')

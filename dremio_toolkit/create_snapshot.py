@@ -33,8 +33,8 @@ def parse_args():
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
     arg_parser.add_argument("-p", "--password", help="User password.", required=True)
-    arg_parser.add_argument("-m", "--output-mode", help="Whether create a single output JSON file or a directory with "
-                                                        "individual files for each object.", required=False,
+    arg_parser.add_argument("-m", "--output-mode", help="FILE, default, will create a single output JSON file, DIR will "
+                                                        "create a directory with individual files for each object.", required=False,
                                                         choices=['FILE', 'DIR'], default='FILE')
     arg_parser.add_argument("-o", "--output-path", help="Json file name or a directory name to save Dremio environment.", required=True)
     arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the exception report.", required=False)

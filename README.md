@@ -35,6 +35,7 @@ PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_
     -d or --dremio-environment-url : URL to Dremio environment.
     -u or --user : Dremio user name. User must be a Dremio admin.
     -p or --password : Dremio user password.
+    -s or --space : Limits the scope of creating a snapshot to a specified Dremio Space. If not specified, the snapshot will include all objects from all Spaces.
     -m or --output-mode : FILE, default, will create a single output JSON file, DIR will create a directory with individual files for each object.
     -o or --output-path : Json file name or a directory name to save Dremio environment.
     -r or --report-filename : File name for the tab delimited exception report report.
@@ -121,7 +122,7 @@ PYTHONPATH=./ python dremio_toolkit/rebuild_metadata.py -d <DREMIO_HOST>:<DREMIO
     -d or --dremio-environment-url : URL to Dremio environment.
     -u or --user : User name. User must be a Dremio admin.
     -p or --password : User password.
-    -s or --datasource : Limits the scope of the metadata refresh to physical datasets in a specified datasource. If not specified, metadata for all physical datasets in all datasources will be refreshed.
+    -s or --datasource : Limits the scope of the metadata refresh to physical datasets (PDS) in a specified Dremio Data Source. If not specified, metadata for all physical datasets in all datasources will be refreshed.
     -c or --concurrency : Concurrency for executing metadata refresh. It is not recommended to set it higher than 4 if dremio.iceberg.enabled is not set to True. Default concurrency is 1.
     -r or --report-filename : File name for the JSON report.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.

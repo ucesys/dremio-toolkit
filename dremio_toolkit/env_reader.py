@@ -45,8 +45,8 @@ class EnvReader:
 		self._failed_vds_graphs = []
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
-	def read_dremio_environment(self) -> EnvDefinition:
-		self._read_catalogs()
+	def read_dremio_environment(self, space: str) -> EnvDefinition:
+		self._read_catalogs(space)
 		self._read_reflections()
 		self._read_rules()
 		self._read_queues()
@@ -96,7 +96,7 @@ class EnvReader:
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,
 	# and save objects into self._env_api_def
-	def _read_catalogs(self) -> None:
+	def _read_catalogs(self, space: str) -> None:
 		containers = self._env_api.list_catalogs()['data']
 		self._logger.new_process_status(len(containers), 'Reading Catalogs. ')
 		for container in containers:
@@ -105,10 +105,10 @@ class EnvReader:
 				self._logger.debug(f"Processing {container_type} container: ", catalog=container)
 				self._top_level_hierarchy_context = container_type
 
-				if container_type != ContainerType.HOME and container not in self._env_def.containers:
+				if container_type != ContainerType.HOME and container not in self._env_def.containers\
+						and (space is not None and container['path'][0] == space):
 					self._env_def.containers.append(container)
-
-				self._read_entity(container, container_type)
+					self._read_entity(container, container_type)
 
 			else:
 				self._logger.fatal("Unexpected catalog type ", catalog=container)

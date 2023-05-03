@@ -33,6 +33,7 @@ class EnvFileWriter:
 
     @staticmethod
     def save_dremio_environment(env_def: EnvDefinition, output_mode: str, output_path: str, logger) -> None:
+        logger.new_process_status(100, 'Persisting snapshot.')
         if output_mode == 'FILE':
             return EnvFileWriter.save_dremio_environment_as_file(env_def, output_path, logger)
         else:

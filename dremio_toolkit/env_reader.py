@@ -45,13 +45,43 @@ class EnvReader:
 		self._failed_vds_graphs = []
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
-	def read_dremio_environment(self, space: str) -> EnvDefinition:
-		self._read_catalogs(space)
+	def read_dremio_environment(self, spaces: str, suppress_dependencies: bool = True) -> EnvDefinition:
+		self._read_catalogs(spaces)
 		self._read_reflections()
 		self._read_rules()
 		self._read_queues()
 		self._read_votes()
+		# If not a full snapshot, make sure to collect VDS dependencies
+		if spaces is not None and not suppress_dependencies:
+			self._collect_vds_dependencies()
 		return self._env_def
+
+	def _collect_vds_dependencies(self):
+		for graph in self._env_def.vds_parents:
+			for parent_path in graph['parents']:
+				parent_found = False
+				for vds in self._env_def.vds_list:
+					if parent_path == Utils.get_str_path(vds['path']):
+						parent_found = True
+				if not parent_found:
+					# Collect parent
+					parent_entity = self._env_api.get_catalog_by_path(parent_path)
+					# Ignore PDS
+					if parent_entity is not None and parent_entity['type'] == 'VIRTUAL_DATASET':
+						self._collect_virtual_dataset(parent_entity)
+						# Make sure the parent space and folders are also collected
+						space = self._env_api.get_catalog_by_path(parent_entity['path'][0])
+						if space not in self._env_def.spaces:
+							self._env_def.spaces.append(space)
+						folder_path = space['name']
+						for index, folder in enumerate(parent_entity['path']):
+							if index != 0 and index != len(parent_entity['path'])-1:
+								folder_path += '/' + folder
+								folder_entity = self._env_api.get_catalog_by_path(folder_path)
+								if folder_entity not in self._env_def.folders:
+									self._env_def.folders.append(folder_entity)
+								self._read_entity_acl(folder_entity)
+								self._read_wiki(folder_entity)
 
 	def write_exception_report(self, report_file: str, delimiter: str = '\t') -> None:
 		self._logger.new_process_status(100, 'Reporting Exceptions.')
@@ -96,18 +126,20 @@ class EnvReader:
 	# Read top level Dremio catalogs from source Dremio environment,
 	# traverse through the entire catalogs' hierarchies,
 	# and save objects into self._env_api_def
-	def _read_catalogs(self, space: str) -> None:
+	def _read_catalogs(self, spaces: str) -> None:
 		containers = self._env_api.list_catalogs()['data']
 		self._logger.new_process_status(len(containers), 'Reading Catalogs. ')
 		for container in containers:
 			container_type = container['containerType']
 			if container_type in ContainerType.all():
+				if container_type == ContainerType.HOME:
+					self._logger.debug(f"Skipping {container_type} container: ", catalog=container)
+					continue
 				self._logger.debug(f"Processing {container_type} container: ", catalog=container)
 				self._top_level_hierarchy_context = container_type
-
-				if container_type != ContainerType.HOME and container not in self._env_def.containers\
-						and (space is not None and container['path'][0] == space):
+				if container not in self._env_def.containers:
 					self._env_def.containers.append(container)
+				if spaces is None or spaces == [] or container['path'][0] in spaces:
 					self._read_entity(container, container_type)
 
 			else:
@@ -127,7 +159,7 @@ class EnvReader:
 			self._read_entity_acl(entity)
 			self._read_wiki(entity)
 
-			if container_type in [ContainerType.HOME, ContainerType.SPACE]:
+			if container_type in [ContainerType.SPACE]:
 				self._read_space_or_folder_children(entity)
 
 	# Read Space Folder container and traverse through its children hierarchy.
@@ -153,17 +185,21 @@ class EnvReader:
 				self._logger.info(
 					"Unexpected DATASET type: " + dataset_container['datasetType'] + " : ", catalog=dataset_container)
 			elif dataset_container['datasetType'] == "VIRTUAL":
-				if dataset_entity not in self._env_def.vds_list:
-					self._env_def.vds_list.append(dataset_entity)
-			else:
-				self._logger.error(
-					"Unexpected DATASET type " + dataset_container['datasetType'] + " for ", catalog=dataset_container)
-			self._read_entity_acl(dataset_entity)
-			self._read_wiki(dataset_entity)
-			self._read_tags(dataset_entity)
-			self._read_vds_graph(dataset_entity)
+				self._collect_virtual_dataset(dataset_entity)
 
-	# Read Home/Space/Folder container and traverse through its children hierarchy.
+	def _collect_virtual_dataset(self, dataset_entity):
+		if dataset_entity['type'] != "VIRTUAL_DATASET":
+			self._logger.error(
+				"Unexpected DATASET type " + dataset_entity['type'] + " for ", catalog=dataset_entity)
+			return
+		if dataset_entity not in self._env_def.vds_list:
+			self._env_def.vds_list.append(dataset_entity)
+		self._read_entity_acl(dataset_entity)
+		self._read_wiki(dataset_entity)
+		self._read_tags(dataset_entity)
+		self._read_vds_graph(dataset_entity)
+
+# Read Home/Space/Folder container and traverse through its children hierarchy.
 	def _read_space_or_folder_children(self, space) -> None:
 		self._logger.debug("Processing children for HOME/SPACE/FOLDER: ", catalog=space)
 		if 'entityType' not in space:

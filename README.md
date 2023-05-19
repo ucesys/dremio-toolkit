@@ -35,7 +35,8 @@ PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_
     -d or --dremio-environment-url : URL to Dremio environment.
     -u or --user : Dremio user name. User must be a Dremio admin.
     -p or --password : Dremio user password.
-    -s or --space : Limits the scope of creating a snapshot to a specified Dremio Space. If not specified, the snapshot will include all objects from all Spaces.
+    -a or --add-space : Limits the scope of creating a snapshot to specified Dremio Space(s). Repeat this option multiple times to process multiple spaces.
+    -s or --suppress-dependencies : If --add-space is specified, dremio-toolkit will collect parent virtual datasets by default. It can be suppressed with this parameter.
     -m or --output-mode : FILE, default, will create a single output JSON file, DIR will create a directory with individual files for each object.
     -o or --output-path : Json file name or a directory name to save Dremio environment.
     -r or --report-filename : File name for the tab delimited exception report report.

@@ -30,7 +30,7 @@ from dremio_toolkit.env_definition import EnvDefinition
 class EnvFileWriter:
     CONTAINER_SELF_FILENAME = '___self.json'
     DREMIO_ENV_FILENAME = 'dremio_environment.json'
-    DREMIO_ENV_FILE_VERSION = "1.1"
+    DREMIO_ENV_FILE_VERSION = "2.0"
 
     @staticmethod
     def save_dremio_environment(context: Context, env_def: EnvDefinition) -> None:
@@ -79,6 +79,7 @@ class EnvFileWriter:
     @staticmethod
     def save_dremio_environment_as_directory(context, env_def) -> None:
         output_dir = context.get_output_path()
+        logger = context.get_logger()
         try:
             # create directory structure as needed
             if os.path.isdir(output_dir):

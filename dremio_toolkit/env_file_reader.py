@@ -21,29 +21,31 @@ import os
 from dremio_toolkit.env_definition import EnvDefinition
 from dremio_toolkit.env_file_writer import EnvFileWriter
 from dremio_toolkit.context import Context
-
+from dremio_toolkit.env_definition import EnvDefinition
 
 ###
 # This class uses DremioData object to update Dremio environment.
 ###
 class EnvFileReader:
 
+    DREMIO_ENV_FILE_VERSION_20 = '2.0'
+
     @staticmethod
     def read_dremio_source_environment(context: Context):
         if context.get_input_mode() == Context.PATH_MODE_FILE:
-            return EnvFileReader._read_dremio_environment_from_file(context.get_input_path())
+            return EnvFileReader._read_dremio_environment_from_file(context, context.get_input_path())
         else:
-            return EnvFileReader._read_dremio_environment_from_directory(context.get_input_path())
+            return EnvFileReader._read_dremio_environment_from_directory(context, context.get_input_path())
 
     @staticmethod
     def read_dremio_target_environment(context: Context):
         if context.get_output_mode() == Context.PATH_MODE_FILE:
-            return EnvFileReader._read_dremio_environment_from_file(context.get_output_path())
+            return EnvFileReader._read_dremio_environment_from_file(context, context.get_output_path())
         else:
-            return EnvFileReader._read_dremio_environment_from_directory(context.get_output_path())
+            return EnvFileReader._read_dremio_environment_from_directory(context, context.get_output_path())
 
     @staticmethod
-    def _read_dremio_environment_from_file(filename: str):
+    def _read_dremio_environment_from_file(context: Context, filename: str):
         f = open(filename, "r", encoding="utf-8")
         data = json.load(f)['data']
         f.close()
@@ -56,6 +58,13 @@ class EnvFileReader:
                     env_def.file_version = env_item['file_version']
                 elif 'timestamp_utc' in env_item:
                     env_def.timestamp_utc = env_item['timestamp_utc']
+        if env_def.file_version == EnvFileReader.DREMIO_ENV_FILE_VERSION_20:
+            return EnvFileReader._read_dremio_environment_from_file_fv20(data, env_def)
+        else:
+            context.get_logger().fatal("Unsupported file version: " + str(env_def.file_version))
+
+    @staticmethod
+    def _read_dremio_environment_from_file_fv20(data, env_def: EnvDefinition):
         if 'sources' in data:
             env_def.sources = data['sources']
         if 'spaces' in data:
@@ -89,7 +98,7 @@ class EnvFileReader:
         return env_def
 
     @staticmethod
-    def _read_dremio_environment_from_directory(source_directory):
+    def _read_dremio_environment_from_directory(context: Context, source_directory: str):
         try:
             env_def = EnvDefinition()
             f = open(os.path.join(source_directory, EnvFileWriter.DREMIO_ENV_FILENAME), "r", encoding="utf-8")

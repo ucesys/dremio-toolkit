@@ -23,6 +23,7 @@ from datetime import datetime
 from shutil import rmtree
 
 
+from dremio_toolkit.context import Context
 from dremio_toolkit.env_definition import EnvDefinition
 
 
@@ -32,15 +33,17 @@ class EnvFileWriter:
     DREMIO_ENV_FILE_VERSION = "1.1"
 
     @staticmethod
-    def save_dremio_environment(env_def: EnvDefinition, output_mode: str, output_path: str, logger) -> None:
+    def save_dremio_environment(context: Context, env_def: EnvDefinition) -> None:
+        logger = context.get_logger()
         logger.new_process_status(100, 'Persisting snapshot.')
-        if output_mode == 'FILE':
-            return EnvFileWriter.save_dremio_environment_as_file(env_def, output_path, logger)
+        if context.get_output_mode() == 'FILE':
+            return EnvFileWriter.save_dremio_environment_as_file(context, env_def)
         else:
-            return EnvFileWriter.save_dremio_environment_as_directory(env_def, output_path, logger)
+            return EnvFileWriter.save_dremio_environment_as_directory(context, env_def)
 
     @staticmethod
-    def save_dremio_environment_as_file(env_def: EnvDefinition, output_file: str, logger) -> None:
+    def save_dremio_environment_as_file(context: Context, env_def) -> None:
+        output_file = context.get_output_path()
         if os.path.isfile(output_file):
             os.remove(output_file)
 
@@ -74,7 +77,8 @@ class EnvFileWriter:
             json.dump(env_snapshot, f, indent=4, sort_keys=True)
 
     @staticmethod
-    def save_dremio_environment_as_directory(env_def: EnvDefinition, output_dir: str, logger) -> None:
+    def save_dremio_environment_as_directory(context, env_def) -> None:
+        output_dir = context.get_output_path()
         try:
             # create directory structure as needed
             if os.path.isdir(output_dir):

@@ -21,6 +21,7 @@ from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_file_writer import EnvFileWriter
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
+from dremio_toolkit.context import Context
 
 
 def parse_args():
@@ -42,19 +43,25 @@ def parse_args():
     return parsed_args
 
 
-def explode_snapshot(input_path, output_path, log_level, log_filename, verbose):
+def explode_snapshot(ctx: Context):
     # Process command
-    logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
+    logger = ctx.get_logger()
     file_reader = EnvFileReader()
-    env_def = file_reader.read_dremio_environment('FILE', input_path)
-    EnvFileWriter.save_dremio_environment(env_def, 'DIR', output_path, logger)
+    env_def = file_reader.read_dremio_source_environment(ctx)
+    EnvFileWriter.save_dremio_environment(ctx, env_def)
 
     # Return process status to the OS
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
-        exit(Utils.NON_FATAL_EXIT_CODE)
+        exit(Context.NON_FATAL_EXIT_CODE)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    explode_snapshot(args.input_path, args.output_path, args.log_level, args.log_filename, args.verbose)
+
+    context = Context(Context.CMD_EXPLODE_SNAPSHOT)
+    context.init_logger(log_level=args.log_level, log_verbose=args.verbose, log_filepath=args.log_filename)
+    context.set_source(input_mode=Context.PATH_MODE_FILE, input_path=args.input_path)
+    context.set_target(output_mode=Context.PATH_MODE_DIR, output_path=args.output_path)
+
+    explode_snapshot(context)

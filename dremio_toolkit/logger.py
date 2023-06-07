@@ -21,6 +21,7 @@ from datetime import datetime
 
 from dremio_toolkit.utils import Utils
 
+
 class Logger:
     # Configuration
     _LEVELS = {'ERROR': 40, 'WARN': 30, 'WARNING': 30, 'INFO': 20, 'DEBUG': 10}
@@ -31,7 +32,10 @@ class Logger:
     _process_total = 0
     _process_start_time = None
 
-    def __init__(self, max_errors=9999, level=logging.ERROR, verbose=False, log_file: str = None):
+    def __init__(self, context, max_errors=9999,
+                 level=logging.ERROR, verbose=False, log_file: str = None):
+        self._context = context
+        self._uuid = context.get_uuid()
         if type(level) == str:
             level = self._LEVELS[level]
         self._root_logger = logging.getLogger('root')
@@ -41,9 +45,13 @@ class Logger:
         self._verbose = verbose
         self._process_start_time = datetime.now()
         self._last_error_message = ''
+        print('Running command ' + self._context.get_command() + '. Run ID: ' + self._uuid)
         if log_file:
             print('Logger will write to file: ' + log_file)
             logging.basicConfig(handlers=[logging.FileHandler(filename=log_file, encoding='utf-8', mode='a+')])
+
+    def set_uuid(self, uuid: str):
+        self._uuid = uuid
 
     def fatal(self, message: str, catalog: str = None) -> None:
         self._root_logger.critical(self._enrich_message(message, catalog))
@@ -61,9 +69,9 @@ class Logger:
         else:
             if object_list:
                 if self._verbose:
-                    self.error(message + ' ' + str(object_list))
+                    self.error(self._enrich_message(message) + ' ' + str(object_list))
                 else:
-                    self.error(message + ', total: ' + str(len(object_list)) + ' items.')
+                    self.error(self._enrich_message(message) + ', total: ' + str(len(object_list)) + ' items.')
             else:
                 self._root_logger.error(self._enrich_message(message, catalog))
 
@@ -119,6 +127,7 @@ class Logger:
 
     # Enrich message with either catalog ID or entire catalog JSON depending on verbose setting
     def _enrich_message(self, message: str, catalog: dict = None) -> str:
+        message = 'Run:' + self._uuid + ': ' + message
         if catalog is None or type(catalog) != dict:
             return message
         if self._verbose:

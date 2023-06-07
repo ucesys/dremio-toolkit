@@ -24,6 +24,7 @@ from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_api import EnvApi
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.rebuild_metadata_thread import RebuildMetadataThread
+from dremio_toolkit.context import Context
 import threading
 
 MAX_ROWS_PER_PAGE = 100
@@ -42,6 +43,8 @@ def parse_args():
     arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the JSON exception' report.", required=False)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
+    arg_parser.add_argument("-v", "--verbose", help="Set Log to verbose to print object definitions instead of object IDs.",
+                            required=False, default=False, action='store_true')
     arg_parser.add_argument("-f", "--log-filename", help="Set Log to write to a specified file instead of STDOUT.",
                             required=False)
     parsed_args = arg_parser.parse_args()
@@ -52,16 +55,16 @@ def parse_args():
     return parsed_args
 
 
-def rebuild_metadata(dremio_environment_url, user, password, datasource, concurrency, report_filename, log_level, log_filename):
-    logger = Logger(level=log_level, log_file=log_filename)
+def rebuild_metadata(ctx: Context, datasource, concurrency):
+    logger = ctx.get_logger()
     logger.new_process_status(1, 'Retrieving list of PDS for rebuilding metadata ...')
-    env_api = EnvApi(dremio_environment_url, user, password, logger)
+    env_api = ctx.get_target_env_api()
     # Validate the Dremio environment can scale metadata refresh
     if concurrency > 4:
-        iceberg_enabled, option_type, option_status = env_api.get_sys_option('dremio.iceberg.enabled')
+        iceberg_enabled, option_type, option_status = env_api.get_sys_option('dremio.iceberg.enabled', ctx.get_sql_comment_uuid())
         if not iceberg_enabled:
             print("Specifying concurrency higher than 4 without setting dremio.iceberg.enabled to True may impact Dremio performance and stability.")
-    pds_list = get_pds_list(env_api, datasource)
+    pds_list = get_pds_list(ctx, datasource)
     if pds_list is None:
         logger.fatal("Unable to retrieve list of PDS. ")
     if len(pds_list) == 0:
@@ -73,7 +76,7 @@ def rebuild_metadata(dremio_environment_url, user, password, datasource, concurr
         # Wait for a thread to become available to not exceed specified concurrency
         while threading.activeCount() >= base_threads_count + concurrency:
             time.sleep(3)
-        new_thread = RebuildMetadataThread(env_api, pds, logger)
+        new_thread = RebuildMetadataThread(ctx, pds)
         new_thread.start()
         threads.append(new_thread)
 
@@ -91,6 +94,7 @@ def rebuild_metadata(dremio_environment_url, user, password, datasource, concurr
                                  'refresh_job_info': thread.get_refresh_job_info()})
 
     # Produce execution report
+    report_filename = ctx.get_report_filepath()
     if report_filename:
         if os.path.isfile(report_filename):
             os.remove(report_filename)
@@ -102,11 +106,13 @@ def rebuild_metadata(dremio_environment_url, user, password, datasource, concurr
         exit(Utils.NON_FATAL_EXIT_CODE)
 
 
-def get_pds_list(env_api, datasource) -> list:
-    sql = 'SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_TYPE = \'TABLE\''
+def get_pds_list(ctx: Context, datasource) -> list:
+    sql = ctx.get_sql_comment_uuid() + \
+          'SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA."TABLES" WHERE TABLE_TYPE = \'TABLE\''
     if datasource:
         sql += ' AND ( \'' + datasource.lower() + '\' = LOWER(TABLE_SCHEMA) OR ' +\
                        'POSITION(\'' + datasource.lower() + '.\' IN LOWER(TABLE_SCHEMA)) = 1)'
+    env_api = ctx.get_target_env_api()
     status, jobid, job_result = env_api.execute_sql(sql)
     if not status:
         return None
@@ -125,12 +131,11 @@ def get_pds_list(env_api, datasource) -> list:
 
 if __name__ == '__main__':
     args = parse_args()
-    rebuild_metadata(args.dremio_environment_url,
-                     args.user,
-                     args.password,
-                     args.datasource,
-                     int(args.concurrency),
-                     args.report_filename,
-                     args.log_level,
-                     args.log_filename)
+
+    context = Context(Context.CMD_REBUILD_METADATA)
+    context.init_logger(log_level=args.log_level, log_verbose=args.verbose, log_filepath=args.log_filename)
+    context.set_target(env_api=EnvApi(args.dremio_environment_url, args.user, args.password, context))
+    context.set_report(report_filepath=args.report_filename)
+
+    rebuild_metadata(context, args.datasource, int(args.concurrency))
 

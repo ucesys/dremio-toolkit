@@ -20,6 +20,7 @@ import json
 import os
 from dremio_toolkit.env_definition import EnvDefinition
 from dremio_toolkit.env_file_writer import EnvFileWriter
+from dremio_toolkit.context import Context
 
 
 ###
@@ -28,14 +29,21 @@ from dremio_toolkit.env_file_writer import EnvFileWriter
 class EnvFileReader:
 
     @staticmethod
-    def read_dremio_environment(input_mode: str, path: str):
-        if input_mode == 'FILE':
-            return EnvFileReader.read_dremio_environment_from_file(path)
+    def read_dremio_source_environment(context: Context):
+        if context.get_input_mode() == Context.PATH_MODE_FILE:
+            return EnvFileReader._read_dremio_environment_from_file(context.get_input_path())
         else:
-            return EnvFileReader.read_dremio_environment_from_directory(path)
+            return EnvFileReader._read_dremio_environment_from_directory(context.get_input_path())
 
     @staticmethod
-    def read_dremio_environment_from_file(filename: str):
+    def read_dremio_target_environment(context: Context):
+        if context.get_output_mode() == Context.PATH_MODE_FILE:
+            return EnvFileReader._read_dremio_environment_from_file(context.get_output_path())
+        else:
+            return EnvFileReader._read_dremio_environment_from_directory(context.get_output_path())
+
+    @staticmethod
+    def _read_dremio_environment_from_file(filename: str):
         f = open(filename, "r", encoding="utf-8")
         data = json.load(f)['data']
         f.close()
@@ -81,7 +89,7 @@ class EnvFileReader:
         return env_def
 
     @staticmethod
-    def read_dremio_environment_from_directory(source_directory):
+    def _read_dremio_environment_from_directory(source_directory):
         try:
             env_def = EnvDefinition()
             f = open(os.path.join(source_directory, EnvFileWriter.DREMIO_ENV_FILENAME), "r", encoding="utf-8")

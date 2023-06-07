@@ -21,6 +21,7 @@ from dremio_toolkit.env_api import EnvApi
 from dremio_toolkit.env_definition import EnvDefinition
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.utils import Utils
+from dremio_toolkit.context import Context
 import time
 import os
 
@@ -35,17 +36,18 @@ class ContainerType:
 
 
 class EnvReader:
-	def __init__(self, env_api: EnvApi, logger: Logger):
+	def __init__(self, context: Context):
 		self._env_def = EnvDefinition()
-		self._env_api = env_api
-		self._logger = logger
-		self._env_def.endpoint = env_api.get_env_endpoint()
+		self._context = context
+		self._env_api = context.get_source_env_api()
+		self._logger = context.get_logger()
+		self._env_def.endpoint = self._env_api.get_env_endpoint()
 		# Current top-level hierarchy context: Home, Space, Source
 		self._top_level_hierarchy_context: Optional[str] = None
 		self._failed_vds_graphs = []
 
 	# Read all objects from the source Dremio environment and return as EnvDefinition
-	def read_dremio_environment(self, spaces: str, suppress_dependencies: bool = True) -> EnvDefinition:
+	def read_dremio_environment(self, spaces: str = None, suppress_dependencies: bool = True) -> EnvDefinition:
 		self._read_catalogs(spaces)
 		self._read_reflections()
 		self._read_rules()
@@ -83,9 +85,12 @@ class EnvReader:
 								self._read_entity_acl(folder_entity)
 								self._read_wiki(folder_entity)
 
-	def write_exception_report(self, report_file: str, delimiter: str = '\t') -> None:
+	def write_exception_report(self, context: Context) -> None:
+		report_file = context.get_report_filepath()
+		delimiter = context.get_report_delimiter()
 		self._logger.new_process_status(100, 'Reporting Exceptions.')
-		sql = 'SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT ' \
+		sql = context.get_sql_comment_uuid() + \
+			  'SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT ' \
 			  'FROM SYS."VIEWS" V ' \
 			  'JOIN SYS."USERS" U ON V.OWNER_ID = U.USER_ID ' \
 			  "WHERE POSITION('@' IN PATH)=2 OR POSITION('@' IN SQL_CONTEXT)=1 "

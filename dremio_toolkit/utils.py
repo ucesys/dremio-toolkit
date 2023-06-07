@@ -19,8 +19,6 @@
 
 class Utils:
 
-    NON_FATAL_EXIT_CODE = 2
-
     def __init__(self):
         return
 

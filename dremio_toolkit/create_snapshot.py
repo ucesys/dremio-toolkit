@@ -17,11 +17,10 @@
 #########################################################################
 
 import argparse
-from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_api import EnvApi
 from dremio_toolkit.env_reader import EnvReader
-from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_writer import EnvFileWriter
+from dremio_toolkit.context import Context
 
 
 def parse_args():
@@ -57,29 +56,26 @@ def parse_args():
     return parsed_args
 
 
-def create_snapshot(snapshot_env_api, spaces, suppress_dependencies, snapshot_logger, output_mode, output_path,
-                    report_filename, report_delimiter):
-    env_reader = EnvReader(snapshot_env_api, snapshot_logger)
+def create_snapshot(context, spaces, suppress_dependencies):
+    env_reader = EnvReader(context)
     env_def = env_reader.read_dremio_environment(spaces, suppress_dependencies)
 
-    EnvFileWriter.save_dremio_environment(env_def, output_mode, output_path, snapshot_logger)
+    EnvFileWriter.save_dremio_environment(context, env_def)
 
-    if report_filename is not None:
-        env_reader.write_exception_report(report_filename, report_delimiter)
+    env_reader.write_exception_report(context)
 
-    logger.finish_process_status_reporting()
-    if logger.get_error_count() > 0:
-        exit(Utils.NON_FATAL_EXIT_CODE)
+    context.get_logger().finish_process_status_reporting()
+    if context.get_logger().get_error_count() > 0:
+        exit(Context.NON_FATAL_EXIT_CODE)
 
 
 if __name__ == '__main__':
     args = parse_args()
 
-    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_filename)
-    env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger)
+    context = Context(Context.CMD_CREATE_SNAPSHOT)
+    context.init_logger(log_level=args.log_level, log_verbose=args.verbose, log_filepath=args.log_filename)
+    context.set_source(env_api=EnvApi(args.dremio_environment_url, args.user, args.password, context))
+    context.set_target(output_mode=args.output_mode, output_path=args.output_path)
+    context.set_report(report_filepath=args.report_filename, report_delimiter=args.report_delimiter)
+    create_snapshot(context=context, spaces=args.add_space, suppress_dependencies=args.suppress_dependencies)
 
-    create_snapshot(
-        snapshot_env_api=env_api, spaces=args.add_space, suppress_dependencies=args.suppress_dependencies,
-        snapshot_logger=logger, output_mode=args.output_mode, output_path=args.output_path,
-        report_filename=args.report_filename, report_delimiter=args.report_delimiter
-    )

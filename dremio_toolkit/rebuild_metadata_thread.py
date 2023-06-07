@@ -20,14 +20,16 @@ import threading
 
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_api import EnvApi
+from dremio_toolkit.context import Context
 
 
 class RebuildMetadataThread(threading.Thread):
 
-    def __init__(self, env_api: EnvApi, pds_path: str, logger: Logger):
+    def __init__(self, context: Context, pds_path: str):
         threading.Thread.__init__(self)
-        self._logger = logger
-        self._env_api = env_api
+        self._context = context
+        self._logger = context.get_logger()
+        self._env_api = context.get_target_env_api()
         self._pds_path = pds_path
         self._status = None
         self._forget_job_id = None
@@ -36,11 +38,13 @@ class RebuildMetadataThread(threading.Thread):
         self._refresh_job_info = None
 
     def run(self):
-        success, jobid, job_info = self._env_api.execute_sql('ALTER PDS ' + self._pds_path + ' FORGET METADATA')
+        success, jobid, job_info = self._env_api.execute_sql(self._context.get_sql_comment_uuid() +
+                                                             'ALTER PDS ' + self._pds_path + ' FORGET METADATA')
         self._forget_job_id = jobid
         self._forget_job_info = job_info
         if success:
-            success, jobid, job_info = self._env_api.execute_sql('ALTER PDS ' + self._pds_path + ' REFRESH METADATA AUTO PROMOTION')
+            success, jobid, job_info = self._env_api.execute_sql(self._context.get_sql_comment_uuid() +
+                                                'ALTER PDS ' + self._pds_path + ' REFRESH METADATA AUTO PROMOTION')
             self._refresh_job_id = jobid
             self._refresh_job_info = job_info
         if not success:

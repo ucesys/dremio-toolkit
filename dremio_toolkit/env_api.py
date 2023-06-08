@@ -97,6 +97,7 @@ class EnvApi:
                                     headers=headers, timeout=self._api_timeout, verify=self._verify_ssl)
         if response.status_code != 200:
             self._logger.fatal("Authentication Error " + str(response.status_code))
+        self._version = response.json()['version']
         self._token = '_dremio' + response.json()['token']
         self._headers = {"Content-Type": "application/json", "Authorization": self._token}
         # User must be an Admin for most of the dremio-toolkit operations
@@ -107,6 +108,9 @@ class EnvApi:
                 if role['name'] == 'ADMIN':
                     return
             self._logger.fatal("Dremio user is not in ADMIN role.")
+
+    def get_dremio_version(self):
+        return self._version
 
     # Lists all top-level catalog containers.
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog/

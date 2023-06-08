@@ -86,13 +86,19 @@ class Context:
     def get_source_env_api(self):
         return self._env_api_source
 
+    def get_source_env_version(self):
+        return self._env_api_source.get_dremio_version()
+
     def set_target_env_api(self, env_api: EnvApi):
         self._env_api_source = env_api
 
     def get_target_env_api(self):
         return self._env_api_target
 
-    def set_source(self, env_api:EnvApi = None, input_mode:str = None, input_path: str = None):
+    def get_target_env_version(self):
+        return self._env_api_target.get_dremio_version()
+
+    def set_source(self, env_api: EnvApi = None, input_mode: str = None, input_path: str = None):
         self._env_api_source = env_api
         self._input_mode = input_mode
         self._input_path = input_path

@@ -86,6 +86,9 @@ class EnvReader:
 								self._read_wiki(folder_entity)
 
 	def write_exception_report(self, context: Context) -> None:
+		if int(self._env_api.get_dremio_version()[:2]) < 21:
+			self._logger.error("Exception Report will not be produced. Supported for Dremio R21 and higher only.")
+			return
 		report_file = context.get_report_filepath()
 		delimiter = context.get_report_delimiter()
 		self._logger.new_process_status(100, 'Reporting Exceptions.')

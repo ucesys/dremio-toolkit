@@ -21,6 +21,7 @@ from dremio_toolkit.logger import Logger
 from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_api import EnvApi
 from dremio_toolkit.env_definition import EnvDefinition
+from dremio_toolkit.context import Context
 
 
 ###
@@ -55,10 +56,11 @@ class EnvWriter:
     # Last errors
     _last_entity_error = {}
 
-    def __init__(self, env_api: EnvApi, env_def: EnvDefinition, logger: Logger):
-        self._env_api = env_api
+    def __init__(self, context: Context, env_def: EnvDefinition):
+        self._context = context
+        self._env_api = context.get_target_env_api()
         self._env_def = env_def
-        self._logger = logger
+        self._logger = context.get_logger()
 
     def write_dremio_environment(self) -> None:
         self._retrieve_referenced_acl_principals()
@@ -73,7 +75,9 @@ class EnvWriter:
         self._write_wiki()
         self._write_tags()
 
-    def write_exception_report(self, report_file: str, delimiter: str = '\t') -> None:
+    def write_exception_report(self) -> None:
+        report_file = self._context.get_report_filepath()
+        delimiter = self._context.get_report_delimiter()
         if report_file is None:
             return
         # Prep report file

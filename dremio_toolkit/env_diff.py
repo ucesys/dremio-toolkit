@@ -18,6 +18,7 @@
 
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_definition import EnvDefinition
+from dremio_toolkit.context import Context
 import os
 import json
 
@@ -50,8 +51,9 @@ class EnvDiff:
     _base_def: EnvDefinition
     _comp_def: EnvDefinition
 
-    def __init__(self, logger: Logger):
-        self._logger = logger
+    def __init__(self, ctx: Context):
+        self._context = ctx
+        self._logger = ctx.get_logger()
 
     def diff_snapshot(self, base_env_def: EnvDefinition, comp_env_def: EnvDefinition) -> None:
         self._base_def = base_env_def
@@ -67,8 +69,9 @@ class EnvDiff:
         self._diff_tags()
         self._diff_wikis()
 
-    def write_diff_report(self, filename: str) -> None:
+    def write_diff_report(self) -> None:
         print('Writing diff report, might take a min ...')
+        filename = self._context.get_report_filepath()
         if os.path.isfile(filename):
             os.remove(filename)
         diff_json = {

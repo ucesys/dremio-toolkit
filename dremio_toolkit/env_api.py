@@ -58,16 +58,17 @@ class EnvApi:
     # Configuration
     _verify_ssl = None
     DEFAULT_API_TIMEOUT = 120  # Accommodate for Dremio processing time
-    _api_timeout: int = None
+    _api_timeout: int = DEFAULT_API_TIMEOUT
     _dry_run = None
     # Misc
     _timed_out_sources = []
     _headers = ""
     _logger = None
 
-    def __init__(self, endpoint, username, password, dremio_tk_logger,
+    def __init__(self, endpoint, username, password, context,
                  api_timeout=DEFAULT_API_TIMEOUT, verify_ssl=True, dry_run=True):
-        self._logger = dremio_tk_logger
+        self._context = context
+        self._logger = context.get_logger()
         self._endpoint = endpoint
         # Append slash to the endpoint url if needed
         if self._endpoint[-1:] != '/':
@@ -96,6 +97,7 @@ class EnvApi:
                                     headers=headers, timeout=self._api_timeout, verify=self._verify_ssl)
         if response.status_code != 200:
             self._logger.fatal("Authentication Error " + str(response.status_code))
+        self._version = response.json()['version']
         self._token = '_dremio' + response.json()['token']
         self._headers = {"Content-Type": "application/json", "Authorization": self._token}
         # User must be an Admin for most of the dremio-toolkit operations
@@ -106,6 +108,9 @@ class EnvApi:
                 if role['name'] == 'ADMIN':
                     return
             self._logger.fatal("Dremio user is not in ADMIN role.")
+
+    def get_dremio_version(self):
+        return self._version
 
     # Lists all top-level catalog containers.
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog/
@@ -215,7 +220,7 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/catalog/put-catalog-id/
     def update_catalog(self, catalog_id, catalog_definition):
         if self._dry_run:
-            self._logger.warning("Dry Run: not updating catalog.")
+            self._logger.warn("Dry Run: not updating catalog.")
         else:
             return self._http_put(self._catalog + catalog_id, catalog_definition)
 
@@ -223,7 +228,7 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/reflections/post-reflection/
     def create_reflection(self, reflection_definition):
         if self._dry_run:
-            self._logger.warning("Dry Run: not creating reflection.")
+            self._logger.warn("Dry Run: not creating reflection.")
         else:
             return self._http_post(self._reflection, reflection_definition)
 
@@ -231,7 +236,7 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/reflections/put-reflection/
     def update_reflection(self, reflection_id, reflection_definition):
         if self._dry_run:
-            self._logger.warning("Dry Run: not updating reflection.")
+            self._logger.warn("Dry Run: not updating reflection.")
         else:
             return self._http_put(self._reflection + reflection_id, reflection_definition)
 
@@ -239,7 +244,7 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/catalog/post-catalog-id-refresh/
     def refresh_reflections_by_pds_id(self, pds_id):
         if self._dry_run:
-            self._logger.warning("Dry Run: not refreshing reflections by PDS ID.")
+            self._logger.warn("Dry Run: not refreshing reflections by PDS ID.")
         else:
             return self._http_post(self._catalog + pds_id + "/" + self._refresh_postfix)
 
@@ -250,7 +255,7 @@ class EnvApi:
             self._logger.error("Could not locate PDS for path: " + str(pds_path))
             return None
         if self._dry_run:
-            self._logger.warning("Dry Run: not refreshing reflections by PDS PATH.")
+            self._logger.warn("Dry Run: not refreshing reflections by PDS PATH.")
             return
         pds_id = pds['id']
         return self._http_post(self._catalog + pds_id + "/" + self._refresh_postfix)
@@ -259,7 +264,7 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/catalog/post-catalog-collaboration/
     def update_wiki(self, catalog_id, wiki):
         if self._dry_run:
-            self._logger.warning("Dry Run: not updating wiki.")
+            self._logger.warn("Dry Run: not updating wiki.")
         else:
             return self._http_post(self._catalog + catalog_id + "/collaboration/wiki", wiki)
 
@@ -267,7 +272,7 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/catalog/post-catalog-collaboration/
     def update_tag(self, catalog_id, tag):
         if self._dry_run:
-            self._logger.warning("Dry Run: not updating tag.")
+            self._logger.warn("Dry Run: not updating tag.")
         else:
             return self._http_post(self._catalog + catalog_id + "/collaboration/tag", tag)
 
@@ -275,7 +280,7 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/catalog/post-catalog-id/
     def promote_pds(self, pds):
         if self._dry_run:
-            self._logger.warning("Dry Run: not promoting PDS.")
+            self._logger.warn("Dry Run: not promoting PDS.")
             return
         return self._http_post(self._catalog + self._encode_http_param(pds['id']), pds)
 
@@ -327,7 +332,7 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/reflections/delete-reflection/
     def delete_reflection(self, reflection_id):
         if self._dry_run:
-            self._logger.warning("Dry Run: not deleting reflection.")
+            self._logger.warn("Dry Run: not deleting reflection.")
         else:
             return self._http_delete(self._reflection + reflection_id)
 
@@ -335,13 +340,15 @@ class EnvApi:
     # https://docs.dremio.com/software/rest-api/catalog/delete-catalog-id/
     def delete_catalog(self, entity_id):
         if self._dry_run:
-            self._logger.warning("Dry Run: not deleting catalog.")
+            self._logger.warn("Dry Run: not deleting catalog.")
         else:
             return self._http_delete(self._catalog + entity_id)
 
     # Retrieves configuration for supplied option name
-    def get_sys_option(self, option_name: str):
+    def get_sys_option(self, option_name: str, sql_comment: str = None):
         sql = 'select * from sys.options where "name" = \'' + option_name + '\''
+        if sql_comment is not None:
+            sql = sql_comment + sql
         status, jobid, job_result = self.execute_sql(sql)
         if not status:
             return None

@@ -22,6 +22,7 @@ from dremio_toolkit.env_api import EnvApi
 from dremio_toolkit.env_writer import EnvWriter
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
+from dremio_toolkit.context import Context
 
 
 def parse_args():
@@ -54,25 +55,25 @@ def parse_args():
     return parsed_args
 
 
-def push_snapshot(input_mode, input_path, dremio_environment_url, user, password, dry_run,
-                  report_filename, report_delimiter, log_level, log_filename, verbose):
-    # Process command
-    logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
+def push_snapshot(ctx, dry_run):
     file_reader = EnvFileReader()
-    env_def = file_reader.read_dremio_environment(input_mode, input_path)
-    env_api = EnvApi(dremio_environment_url, user, password, logger, dry_run=dry_run)
-    env_writer = EnvWriter(env_api, env_def, logger)
+    env_def = file_reader.read_dremio_source_environment(ctx)
+    env_writer = EnvWriter(ctx, env_def)
     env_writer.write_dremio_environment()
-    env_writer.write_exception_report(report_filename, report_delimiter)
+    env_writer.write_exception_report()
 
     # Return process status to the OS
-    logger.finish_process_status_reporting()
-    if logger.get_error_count() > 0:
-        exit(Utils.NON_FATAL_EXIT_CODE)
+    ctx.get_logger().finish_process_status_reporting()
+    if ctx.get_logger().get_error_count() > 0:
+        exit(Context.NON_FATAL_EXIT_CODE)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    push_snapshot(args.input_mode, args.input_path, args.dremio_environment_url, args.user, args.password, bool(args.dry_run),
-                    args.report_filename, args.report_delimiter, args.log_level, args.log_filename, args.verbose)
 
+    context = Context(Context.CMD_PUSH_SNAPSHOT)
+    context.init_logger(log_level=args.log_level, log_verbose=args.verbose, log_filepath=args.log_filename)
+    context.set_source(input_mode=args.input_mode, input_path=args.input_path)
+    context.set_target(env_api=EnvApi(args.dremio_environment_url, args.user, args.password, context, dry_run=args.dry_run))
+    context.set_report(report_filepath=args.report_filename, report_delimiter=args.report_delimiter)
+    push_snapshot(context, bool(args.dry_run))

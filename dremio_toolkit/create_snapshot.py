@@ -17,11 +17,10 @@
 #########################################################################
 
 import argparse
-from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_api import EnvApi
 from dremio_toolkit.env_reader import EnvReader
-from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_writer import EnvFileWriter
+from dremio_toolkit.context import Context
 
 
 def parse_args():
@@ -33,6 +32,12 @@ def parse_args():
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
     arg_parser.add_argument("-p", "--password", help="User password.", required=True)
+    arg_parser.add_argument("-a", "--add-space", help="Limits the scope of creating a snapshot to a specified "
+                                                          "Dremio Space(s). Repeat this option multiple times to "
+                                                          "process multiple spaces", required=False, action='append')
+    arg_parser.add_argument("-s", "--suppress-dependencies", help="If --add-space is specified, dremio-toolkit will collect "
+                                                             "parent VDS by default. It can be suppressed with this "
+                                                             "parameter.", required=False, default=False, action='store_true')
     arg_parser.add_argument("-m", "--output-mode", help="FILE, default, will create a single output JSON file, DIR will "
                                                         "create a directory with individual files for each object.", required=False,
                                                         choices=['FILE', 'DIR'], default='FILE')
@@ -51,27 +56,26 @@ def parse_args():
     return parsed_args
 
 
-def create_snapshot(env_api, logger, output_mode, output_path, report_filename, report_delimiter):
-    env_reader = EnvReader(env_api, logger)
-    env_def = env_reader.read_dremio_environment()
+def create_snapshot(context, spaces, suppress_dependencies):
+    env_reader = EnvReader(context)
+    env_def = env_reader.read_dremio_environment(spaces, suppress_dependencies)
 
-    if report_filename is not None:
-        env_reader.write_exception_report(report_filename, report_delimiter)
+    EnvFileWriter.save_dremio_environment(context, env_def)
 
-    EnvFileWriter.save_dremio_environment(env_def, output_mode, output_path, logger)
+    env_reader.write_exception_report(context)
 
-    logger.finish_process_status_reporting()
-    if logger.get_error_count() > 0:
-        exit(Utils.NON_FATAL_EXIT_CODE)
+    context.get_logger().finish_process_status_reporting()
+    if context.get_logger().get_error_count() > 0:
+        exit(Context.NON_FATAL_EXIT_CODE)
 
 
 if __name__ == '__main__':
     args = parse_args()
 
-    logger = Logger(level=args.log_level, verbose=args.verbose, log_file=args.log_filename)
-    env_api = EnvApi(args.dremio_environment_url, args.user, args.password, logger)
+    context = Context(Context.CMD_CREATE_SNAPSHOT)
+    context.init_logger(log_level=args.log_level, log_verbose=args.verbose, log_filepath=args.log_filename)
+    context.set_source(env_api=EnvApi(args.dremio_environment_url, args.user, args.password, context))
+    context.set_target(output_mode=args.output_mode, output_path=args.output_path)
+    context.set_report(report_filepath=args.report_filename, report_delimiter=args.report_delimiter)
+    create_snapshot(context=context, spaces=args.add_space, suppress_dependencies=args.suppress_dependencies)
 
-    create_snapshot(
-        env_api=env_api, logger=logger, output_mode=args.output_mode, output_path=args.output_path,
-        report_filename=args.report_filename, report_delimiter=args.report_delimiter
-    )

@@ -24,14 +24,18 @@ from dremio_toolkit.env_file_writer import EnvFileWriter
 from dremio_toolkit.testing.mock_env_definition import mock_env_definition
 from dremio_toolkit.testing.utils import load_snapshot
 from dremio_toolkit.logger import Logger
-
+from dremio_toolkit.context import Context
 
 def test_env_file_writer():
     env_def = mock_env_definition()
     expected_snapshot = load_snapshot()
 
     with tempfile.NamedTemporaryFile(mode='w') as tmp_file:
-        EnvFileWriter.save_dremio_environment(env_def, 'FILE', tmp_file.name, Logger(level="WARN", verbose=False))
+        context = Context()
+        context.init_logger(log_level="WARN", log_verbose=False)
+        context.set_target(output_mode=Context.PATH_MODE_FILE, output_path=tmp_file.name)
+
+        EnvFileWriter.save_dremio_environment(context, env_def)
 
         assert os.path.isfile(tmp_file.name), "Snapshot does not exist"
         assert json.load(open(tmp_file.name)) == expected_snapshot, "Snapshot is different than expected"

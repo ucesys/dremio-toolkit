@@ -21,6 +21,7 @@ from dremio_toolkit.utils import Utils
 from dremio_toolkit.env_diff import EnvDiff
 from dremio_toolkit.logger import Logger
 from dremio_toolkit.env_file_reader import EnvFileReader
+from dremio_toolkit.context import Context
 
 
 def parse_args():
@@ -46,23 +47,26 @@ def parse_args():
     return parsed_args
 
 
-def diff_snapshot(file_mode, base_path, comp_path, report_filename, log_level, log_filename, verbose):
+def diff_snapshot(ctx: Context):
     # Process command
-    logger = Logger(level=log_level, verbose=verbose, log_file=log_filename)
     file_reader = EnvFileReader()
-    base_env_def = file_reader.read_dremio_environment(file_mode, base_path)
-    comp_env_def = file_reader.read_dremio_environment(file_mode, comp_path)
-    env_diff = EnvDiff(logger)
+    base_env_def = file_reader.read_dremio_source_environment(context)
+    comp_env_def = file_reader.read_dremio_target_environment(context)
+    env_diff = EnvDiff(ctx)
     env_diff.diff_snapshot(base_env_def, comp_env_def)
-    env_diff.write_diff_report(report_filename)
+    env_diff.write_diff_report()
 
     # Return process status to the OS
-    logger.finish_process_status_reporting()
-    if logger.get_error_count() > 0:
-        exit(Utils.NON_FATAL_EXIT_CODE)
-
+    context.get_logger().finish_process_status_reporting()
+    if context.get_logger().get_error_count() > 0:
+        exit(Context.NON_FATAL_EXIT_CODE)
 
 if __name__ == '__main__':
     args = parse_args()
-    diff_snapshot(args.file_mode, args.base_path, args.comp_path, args.report_filename,
-                  args.log_level, args.log_filename, args.verbose)
+
+    context = Context(Context.CMD_DIFF_SNAPSHOT)
+    context.init_logger(log_level=args.log_level, log_verbose=args.verbose, log_filepath=args.log_filename)
+    context.set_source(input_mode=args.file_mode, input_path=args.base_path)
+    context.set_target(output_mode=args.file_mode, output_path=args.comp_path)
+    context.set_report(report_filepath=args.report_filename)
+    diff_snapshot(context)

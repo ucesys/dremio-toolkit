@@ -35,6 +35,8 @@ def parse_args():
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
     arg_parser.add_argument("-p", "--password", help="User password.", required=True)
     arg_parser.add_argument("-s", "--sql-filename", help="File name with SQL code.", required=True)
+    arg_parser.add_argument("-e", "--fail-on-error", help="Whether to fail a job on the first error. Default is to continue.",
+                            required=False, default=False, action='store_true')
     arg_parser.add_argument("-r", "--report-filename", help="File name for the JSON exception' report.", required=False)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
@@ -48,7 +50,7 @@ def parse_args():
     return parsed_args
 
 
-def exec_sql(ctx: Context, sql_filename):
+def exec_sql(ctx: Context, sql_filename, fail_on_error: bool):
     with open(sql_filename, 'r') as f:
         sql_code = f.read()
     sql_commands = sql_code.split(';')
@@ -56,15 +58,20 @@ def exec_sql(ctx: Context, sql_filename):
     logger.new_process_status(len(sql_commands), 'Executing SQL. ')
     env_api = ctx.get_target_env_api()
     sql_statuses = []
+    report_filename = ctx.get_report_filepath()
     for sql in sql_commands:
         if sql:
             sql = ctx.get_sql_comment_uuid() + sql
             status, jobid, job_info = env_api.execute_sql(sql)
             job_result = env_api.get_job_result(jobid)
             sql_statuses.append({'sql': sql, 'jobid': jobid, 'job_info': job_info, 'job_result': job_result})
+            if not status:  # any error
+                logger.error('Job ' + str(jobid) + ' failed. See execution report ' + str(report_filename) + '.')
+                if fail_on_error:
+                    print('\nJob failed as per --fail-on-error argument. See execution report.')
+                    exit(Context.FATAL_EXIT_CODE)
         logger.print_process_status(increment=1)
     # Produce execution report
-    report_filename = ctx.get_report_filepath()
     if report_filename:
         if os.path.isfile(report_filename):
             os.remove(report_filename)
@@ -73,7 +80,7 @@ def exec_sql(ctx: Context, sql_filename):
 
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
-        exit(Utils.NON_FATAL_EXIT_CODE)
+        exit(Context.NON_FATAL_EXIT_CODE)
 
 
 if __name__ == '__main__':
@@ -84,5 +91,5 @@ if __name__ == '__main__':
     context.set_target(env_api=EnvApi(args.dremio_environment_url, args.user, args.password, context))
     context.set_report(report_filepath=args.report_filename)
 
-    exec_sql(context, args.sql_filename)
+    exec_sql(context, args.sql_filename, args.fail_on_error)
 

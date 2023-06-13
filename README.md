@@ -104,6 +104,7 @@ PYTHONPATH=./ python dremio_toolkit/exec_sql.py -d <DREMIO_HOST>:<DREMIO_PORT> -
     -u or --user : User name. User must be a Dremio admin.
     -p or --password : User password.
     -s or --sql-filename : File with SQL code to execute.
+    -e or --fail-on-error : Whether to fail a job on the first error. Default is to continue.
     -r or --report-filename : File name for the JSON report.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -f or --log-filename : Set Log to write to a specified file instead of STDOUT."

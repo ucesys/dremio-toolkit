@@ -103,7 +103,7 @@ def rebuild_metadata(ctx: Context, datasource, concurrency):
 
     logger.finish_process_status_reporting()
     if logger.get_error_count() > 0:
-        exit(Utils.NON_FATAL_EXIT_CODE)
+        exit(Context.NON_FATAL_EXIT_CODE)
 
 
 def get_pds_list(ctx: Context, datasource) -> list:

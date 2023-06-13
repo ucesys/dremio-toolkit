@@ -58,7 +58,7 @@ class EnvApi:
     # Configuration
     _verify_ssl = None
     DEFAULT_API_TIMEOUT = 120  # Accommodate for Dremio processing time
-    _api_timeout: int = None
+    _api_timeout: int = DEFAULT_API_TIMEOUT
     _dry_run = None
     # Misc
     _timed_out_sources = []

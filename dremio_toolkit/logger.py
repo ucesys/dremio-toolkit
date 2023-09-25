@@ -107,8 +107,8 @@ class Logger:
             self._process_last_complete = complete
         if complete != 0:
             pct_complete = complete / self._process_total * 100
-            ttn = datetime.now() - self._process_start_time
-            etl = ttn * (self._process_total / complete - 1)
+            ttn = (datetime.now() - self._process_start_time)  // 1000000 * 1000000  # round to seconds
+            etl = (ttn * (self._process_total / complete - 1)) // 1000000 * 1000000  # round to seconds
             if complete < self._process_total:
                 print(self._process_prefix_text +
                       'Processed: ' + str(round(pct_complete)) + '% in ' + str(ttn) +

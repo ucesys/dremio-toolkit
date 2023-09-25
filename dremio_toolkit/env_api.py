@@ -99,7 +99,7 @@ class EnvApi:
         response = requests.request("POST", self._endpoint + self._login, data=payload,
                                     headers=headers, timeout=self._api_timeout, verify=self._verify_ssl)
         if response.status_code != 200:
-            self._logger.fatal("Authentication Error " + str(response.status_code))
+            self._logger.fatal("Authentication Error " + str(response.status_code) + ' Auth URL: ' + self._endpoint + self._login)
         self._version = response.json()['version']
         self._token = '_dremio' + response.json()['token']
         self._headers = {"Content-Type": "application/json", "Authorization": self._token}
@@ -143,8 +143,11 @@ class EnvApi:
 
     # Retrieves graph information about a specific catalog entity
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog-id-graph/
-    def get_catalog_graph(self, catalog_id):
-        return self._http_get(self._catalog + catalog_id + '/' + self._graph_postfix)
+    def get_catalog_graph(self, catalog_id, catalog_name= None):
+        entity = self._http_get(self._catalog + catalog_id + '/' + self._graph_postfix)
+        if entity is None and catalog_name is not None:
+            self._logger.info("Catalog Path: " + str(catalog_name) + " for the Catalog Id: " + str(catalog_id))
+        return entity
 
     def get_username(self):
         return self._username

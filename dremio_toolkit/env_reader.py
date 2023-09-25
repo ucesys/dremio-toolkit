@@ -123,7 +123,7 @@ class EnvReader:
 				job_result = self._env_api.get_job_result(jobid, limit * i, limit)
 				if job_result is not None:
 					for row in job_result['rows']:
-						f.write('VDS is not accessible' + delimiter + 'VDS' + delimiter +
+						f.write('No permission for private user VDS' + delimiter + 'VDS' + delimiter +
 								row['OWNER_USER_NAME'] + delimiter + row['VIEW_NAME'] + delimiter +
 								row['PATH'] + delimiter + 'SQL_CONTEXT:' + row['SQL_CONTEXT'] + '\n')
 			# Report on failed VDS Graph
@@ -233,8 +233,8 @@ class EnvReader:
 		for reflection in reflections:
 			reflection_dataset = self._env_api.get_catalog(reflection['datasetId'])
 			if reflection_dataset is None:
-				self._logger.error("Error processing reflection, cannot get path for container Dataset Id: " +
-								   reflection['datasetId'] + ', Reflection Path: ' + reflection["path"])
+				self._logger.error("Error processing reflection, cannot get find dataset for Dataset Id referenced in Reflection: " +
+								   reflection['datasetId'])
 				continue
 			reflection["path"] = reflection_dataset['path']
 			if reflection not in self._env_def.reflections:
@@ -325,10 +325,11 @@ class EnvReader:
 			self._logger.error("Ref json does not contain catalog 'id', skipping: ", catalog=ref)
 			return None
 		else:
-			return self._env_api.get_catalog(ref['id'])
+			path = ref['path'] if 'path' in ref else None
+			return self._env_api.get_catalog(ref['id'], catalog_name=path)
 
 	def _read_vds_graph(self, vds):
-		graph = self._env_api.get_catalog_graph(vds['id'])
+		graph = self._env_api.get_catalog_graph(vds['id'], vds['path'])
 		if graph is not None:
 			vds_parent_list = []
 			for parent in graph['parents']:

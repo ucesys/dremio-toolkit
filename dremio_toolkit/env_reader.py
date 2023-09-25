@@ -96,7 +96,7 @@ class EnvReader:
 			  'SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT ' \
 			  'FROM SYS."VIEWS" V ' \
 			  'JOIN SYS."USERS" U ON V.OWNER_ID = U.USER_ID ' \
-			  "WHERE POSITION('@' IN PATH)=2 OR POSITION('@' IN SQL_CONTEXT)=1 "
+			  "WHERE POSITION('@' IN PATH)=2 "
 		jobid = self._env_api.submit_sql(sql)
 		# Wait for the job to complete. Should only take a moment
 		while True:
@@ -123,7 +123,7 @@ class EnvReader:
 				job_result = self._env_api.get_job_result(jobid, limit * i, limit)
 				if job_result is not None:
 					for row in job_result['rows']:
-						f.write('Unable to retrieve VDS' + delimiter + 'VDS' + delimiter +
+						f.write('VDS is not accessible' + delimiter + 'VDS' + delimiter +
 								row['OWNER_USER_NAME'] + delimiter + row['VIEW_NAME'] + delimiter +
 								row['PATH'] + delimiter + 'SQL_CONTEXT:' + row['SQL_CONTEXT'] + '\n')
 			# Report on failed VDS Graph

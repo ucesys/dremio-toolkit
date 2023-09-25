@@ -131,12 +131,15 @@ class EnvApi:
 
     # Returns a CatalogEntity by its ID
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog-id/
-    def get_catalog(self, catalog_id):
+    def get_catalog(self, catalog_id, catalog_name=None):
         # catalogId can be an actual Dremio UID or a path prefixed with 'dremio:'
         if catalog_id[:7] == 'dremio:':
             return self.get_catalog_by_path(catalog_id[8:])
         else:
-            return self._http_get(self._catalog + catalog_id)
+            entity = self._http_get(self._catalog + catalog_id)
+            if entity is None and catalog_name is not None:
+                self._logger.info("Catalog Name: " + str(catalog_name) + " for the Catalog Id: " + str(catalog_id))
+            return entity
 
     # Retrieves graph information about a specific catalog entity
     # https://docs.dremio.com/software/rest-api/catalog/get-catalog-id-graph/

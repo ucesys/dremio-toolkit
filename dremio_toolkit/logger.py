@@ -26,17 +26,19 @@ class Logger:
     # Configuration
     _LEVELS = {'ERROR': 40, 'WARN': 30, 'WARNING': 30, 'INFO': 20, 'DEBUG': 10}
 
-    # Status print
-    _process_prefix_text = ''
-    _process_last_complete = 0
-    _process_total = 0
-    _process_start_time = None
-
     def __init__(self, context, level=logging.ERROR, verbose=False, log_file: str = None):
+        # Status print
+        self._process_prefix_text = ''
+        self._process_last_complete = 0
+        self._process_total = 0
+        self._process_start_time = None
+        # Message collections
+        self._errors = []
+        # Other initialization
         self._context = context
         self._uuid = context.get_uuid()
         if type(level) == str:
-            level = self._LEVELS[level]
+            level = Logger._LEVELS[level]
         self._root_logger = logging.getLogger('root')
         self._root_logger.setLevel(level)
         self._error_count = 0
@@ -58,16 +60,23 @@ class Logger:
     def get_last_error_message(self):
         return self._last_error_message
 
+    def get_all_errors(self):
+        return self._errors
+
     def error(self, message: str, catalog: str = None, object_list: list = None) -> None:
         self._last_error_message = message
         self._error_count += 1
         if object_list:
+            enriched_message = self._enrich_message(message)
             if self._verbose:
-                self.error(self._enrich_message(message) + ' ' + str(object_list))
+                self.error(enriched_message + ' ' + str(object_list))
             else:
-                self.error(self._enrich_message(message) + ', total: ' + str(len(object_list)) + ' items.')
+                self.error(enriched_message + ', total: ' + str(len(object_list)) + ' items.')
         else:
+            enriched_message = self._enrich_message(message, catalog)
             self._root_logger.error(self._enrich_message(message, catalog))
+        self._errors.append({'message': message, 'enriched_message': enriched_message, 'catalog': catalog,
+                             'object_list': str(object_list)})
 
     def warn(self, message: str, catalog: str = None) -> None:
         self._root_logger.warning(self._enrich_message(message, catalog))

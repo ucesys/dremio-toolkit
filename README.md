@@ -1,6 +1,6 @@
 # Dremio Toolkit
 
-Dremio Toolkit is a python based utility that helps with day-to-day Dremio operations.  These functions include: object backup (create_snapshot), object restore (push_snapshot) and differences between two backups (diff_snapshot)
+Dremio Toolkit is a python based utility that helps with day-to-day Dremio operations.  These functions include: object backup (take_snapshot), object restore (push_snapshot) and differences between two backups (diff_snapshot)
 
 While Dremio provides a backup utility out of the box. It allows to take a backup and restore a Dremio environment in its entirety. However, sometimes it's not practical to restore the entire environment. You may need to restore only a few of virtual data sets, spaces, or sources without impacting the entire Dremio environment.  Using a combination of these functions allows you to create a CI/CD deployment of Dremio objects.
 
@@ -16,7 +16,7 @@ Dremio Toolkit supports only Dremio Enterprise software. It does not support Com
     2 if only non-fatal errors have been encountered.
 Note that some errors may be absolutely fine depending on the state of the environment. For example, a Data Source maybe not available at the time of running the script which is probably normal for a development environment.
 
-## create_snapshot
+## take_snapshot
 
 Dremio provides a backup utility out of the box. 
 It allows to take a backup and restore a Dremio environment in its entirety. 
@@ -28,7 +28,7 @@ We recommend to take a snapshot of the Development environment on a daily basis.
 
 ### Syntax
 ```commandline
-PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -o <OUTPUT_FILE> -r <REPORT_FILE>
+PYTHONPATH=./ python dremio_toolkit/take_snapshot.py -d <DREMIO_HOST>:<DREMIO_PORT> -u <USER> -p  <PASSWORD> -o <OUTPUT_FILE> -r <REPORT_FILE>
 ```
 
 ### Arguments
@@ -48,7 +48,7 @@ PYTHONPATH=./ python dremio_toolkit/create_snapshot.py -d <DREMIO_HOST>:<DREMIO_
 
 ## push_snapshot
 
-This simple command reads json file produced by <b>create_snapshot</b> command and pushes it to a target environment. You can make modifications to the json file prior to pushing it to reflect only changes that you desire to push.
+This simple command reads json file produced by <b>take_snapshot</b> command and pushes it to a target environment. You can make modifications to the json file prior to pushing it to reflect only changes that you desire to push.
 <br><br>
 
 ### Syntax
@@ -72,7 +72,7 @@ PYTHONPATH=./ python dremio_toolkit/push_snapshot.py -d <DREMIO_HOST>:<DREMIO_PO
 
 ## diff_snapshot
 
-This  command reads two json files (base and comp) produced by <b>create_snapshot</b> command and produces a json file with a report on difference. 
+This  command reads two json files (base and comp) produced by <b>take_snapshot</b> command and produces a json file with a report on difference. 
 <br><br>It's useful functionality when you clone an environment and want to validate that the code in the cloned (comp) Dremio environment is the same to the base environment.
 
 ### Syntax

@@ -31,7 +31,7 @@ def parse_args():
     )
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
-    arg_parser.add_argument("-p", "--password", help="User password.", required=True)
+    arg_parser.add_argument("-p", "--password", help="User password.", required=False)
     arg_parser.add_argument("-a", "--add-space", help="Limits the scope of creating a snapshot to a specified "
                                                           "Dremio Space(s). Repeat this option multiple times to "
                                                           "process multiple spaces", required=False, action='append')

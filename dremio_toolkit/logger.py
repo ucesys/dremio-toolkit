@@ -32,8 +32,7 @@ class Logger:
     _process_total = 0
     _process_start_time = None
 
-    def __init__(self, context, max_errors=9999,
-                 level=logging.ERROR, verbose=False, log_file: str = None):
+    def __init__(self, context, level=logging.ERROR, verbose=False, log_file: str = None):
         self._context = context
         self._uuid = context.get_uuid()
         if type(level) == str:
@@ -41,7 +40,6 @@ class Logger:
         self._root_logger = logging.getLogger('root')
         self._root_logger.setLevel(level)
         self._error_count = 0
-        self._max_errors = max_errors
         self._verbose = verbose
         self._process_start_time = datetime.now()
         self._last_error_message = ''
@@ -63,17 +61,13 @@ class Logger:
     def error(self, message: str, catalog: str = None, object_list: list = None) -> None:
         self._last_error_message = message
         self._error_count += 1
-        if self._error_count > self._max_errors:
-            self._root_logger.critical("Reached max number of errors: " + str(self._max_errors))
-            raise RuntimeError("Reached max number of errors: " + str(self._max_errors))
-        else:
-            if object_list:
-                if self._verbose:
-                    self.error(self._enrich_message(message) + ' ' + str(object_list))
-                else:
-                    self.error(self._enrich_message(message) + ', total: ' + str(len(object_list)) + ' items.')
+        if object_list:
+            if self._verbose:
+                self.error(self._enrich_message(message) + ' ' + str(object_list))
             else:
-                self._root_logger.error(self._enrich_message(message, catalog))
+                self.error(self._enrich_message(message) + ', total: ' + str(len(object_list)) + ' items.')
+        else:
+            self._root_logger.error(self._enrich_message(message, catalog))
 
     def warn(self, message: str, catalog: str = None) -> None:
         self._root_logger.warning(self._enrich_message(message, catalog))

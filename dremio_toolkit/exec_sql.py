@@ -33,7 +33,7 @@ def parse_args():
     )
     arg_parser.add_argument("-d", "--dremio-environment-url", help="URL to Dremio environment.", required=True)
     arg_parser.add_argument("-u", "--user", help="User name. User must be a Dremio admin.", required=True)
-    arg_parser.add_argument("-p", "--password", help="User password.", required=True)
+    arg_parser.add_argument("-p", "--password", help="User password.", required=False)
     arg_parser.add_argument("-s", "--sql-filename", help="File name with SQL code.", required=True)
     arg_parser.add_argument("-e", "--fail-on-error", help="Whether to fail a job on the first error. Default is to continue.",
                             required=False, default=False, action='store_true')

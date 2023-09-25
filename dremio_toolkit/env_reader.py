@@ -102,7 +102,7 @@ class EnvReader:
 		while True:
 			job_info = self._env_api.get_job_info(jobid)
 			if job_info is None or job_info["jobState"] in ['CANCELED', 'FAILED']:
-				self._logger.fatal("Unexpected error. Cannot get a list of INFORMATION_SCHEMA.TABLES.")
+				self._logger.fatal("Unexpected error. Cannot get a list of SYS.VIEWS.")
 			if job_info["jobState"] == 'COMPLETED':
 				break
 			time.sleep(1)

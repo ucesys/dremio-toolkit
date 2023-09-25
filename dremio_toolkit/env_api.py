@@ -21,6 +21,7 @@ import requests
 import sys
 import urllib
 import time
+import getpass
 
 
 ###
@@ -66,7 +67,7 @@ class EnvApi:
     _logger = None
 
     def __init__(self, endpoint, username, password, context,
-                 api_timeout=DEFAULT_API_TIMEOUT, verify_ssl=True, dry_run=True):
+                 api_timeout=DEFAULT_API_TIMEOUT, verify_ssl=True, dry_run=True, request_password=True):
         self._context = context
         self._logger = context.get_logger()
         self._endpoint = endpoint
@@ -74,6 +75,8 @@ class EnvApi:
         if self._endpoint[-1:] != '/':
             self._endpoint += '/'
         self._username = username
+        if password is None or password == '':
+            password = getpass.getpass()
         self._password = password
         self._verify_ssl = verify_ssl
         self._api_timeout = api_timeout

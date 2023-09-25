@@ -233,7 +233,8 @@ class EnvReader:
 		for reflection in reflections:
 			reflection_dataset = self._env_api.get_catalog(reflection['datasetId'])
 			if reflection_dataset is None:
-				self._logger.error("Error processing reflection, cannot get path for dataset_container: " + reflection['datasetId'])
+				self._logger.error("Error processing reflection, cannot get path for container Dataset Id: " +
+								   reflection['datasetId'] + ', Reflection Path: ' + reflection["path"])
 				continue
 			reflection["path"] = reflection_dataset['path']
 			if reflection not in self._env_def.reflections:

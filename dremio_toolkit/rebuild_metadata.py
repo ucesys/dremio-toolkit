@@ -87,13 +87,12 @@ def rebuild_metadata(ctx: Context, datasource, concurrency, refresh_only: False)
     for thread in threads:
         if thread.is_alive():
             thread.join()
-        if thread.get_status():
-            job_statuses.append({'pds': thread.get_pds_path(),
-                                 'forget_job_id': thread.get_forget_job_id(),
-                                 'refresh_job_id': thread.get_refresh_job_id(),
-                                 'pds_rebuild_status': 'SUCCESS' if thread.get_status() else 'FAILED',
-                                 'forget_job_info': thread.get_forget_job_info(),
-                                 'refresh_job_info': thread.get_refresh_job_info()})
+        job_statuses.append({'pds': thread.get_pds_path(),
+                             'forget_job_id': thread.get_forget_job_id(),
+                             'refresh_job_id': thread.get_refresh_job_id(),
+                             'pds_rebuild_status': 'SUCCESS' if thread.get_status() else 'FAILED',
+                             'forget_job_info': thread.get_forget_job_info(),
+                             'refresh_job_info': thread.get_refresh_job_info()})
 
     # Produce execution report
     report_filename = ctx.get_report_filepath()

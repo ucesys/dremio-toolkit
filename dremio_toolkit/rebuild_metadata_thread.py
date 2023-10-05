@@ -25,7 +25,7 @@ from dremio_toolkit.context import Context
 
 class RebuildMetadataThread(threading.Thread):
 
-    def __init__(self, context: Context, pds_path: str):
+    def __init__(self, context: Context, pds_path: str, refresh_only: False):
         threading.Thread.__init__(self)
         self._context = context
         self._logger = context.get_logger()
@@ -36,23 +36,33 @@ class RebuildMetadataThread(threading.Thread):
         self._refresh_job_id = None
         self._forget_job_info = None
         self._refresh_job_info = None
+        self._refresh_only = refresh_only
 
     def run(self):
-        success, jobid, job_info = self._env_api.execute_sql(self._context.get_sql_comment_uuid() +
-                                                             'ALTER PDS ' + self._pds_path + ' FORGET METADATA')
-        self._forget_job_id = jobid
-        self._forget_job_info = job_info
-        if success:
+        if not self._refresh_only:
             success, jobid, job_info = self._env_api.execute_sql(self._context.get_sql_comment_uuid() +
-                                                'ALTER PDS ' + self._pds_path + ' REFRESH METADATA AUTO PROMOTION')
-            self._refresh_job_id = jobid
-            self._refresh_job_info = job_info
+                                                                 'ALTER PDS ' + self._pds_path + ' FORGET METADATA')
+            self._forget_job_id = jobid
+            self._forget_job_info = job_info
+            if not success:
+                self._logger.error('Unable to ALTER PDS: ' + str(self._pds_path) + ' jobid: ' + str(jobid) + ' jobInfo: ' + str(job_info))
+                self._status = success
+                self._logger.print_process_status(increment=1)
+                return
+
+        success, jobid, job_info = self._env_api.execute_sql(self._context.get_sql_comment_uuid() +
+                                            'ALTER PDS ' + self._pds_path + ' REFRESH METADATA AUTO PROMOTION')
         if not success:
-            self._logger.error('Unable to ALTER PDS: ' + str(self._pds_path) + ' jobid: ' + str(jobid) + ' jobInfo: ' + str(job_info))
+            self._logger.error(
+                'Unable to ALTER PDS: ' + str(self._pds_path) + ' jobid: ' + str(jobid) + ' jobInfo: ' + str(job_info))
+        self._refresh_job_id = jobid
+        self._refresh_job_info = job_info
         self._status = success
         self._logger.print_process_status(increment=1)
 
     def get_forget_job_id(self):
+        if self._refresh_only:
+            return 'N/A - refresh only run'
         return self._forget_job_id
 
     def get_refresh_job_id(self):

@@ -126,6 +126,7 @@ PYTHONPATH=./ python dremio_toolkit/rebuild_metadata.py -d <DREMIO_HOST>:<DREMIO
     -p or --password : User password.
     -s or --datasource : Limits the scope of the metadata refresh to physical datasets (PDS) in a specified Dremio Data Source. If not specified, metadata for all physical datasets in all datasources will be refreshed.
     -c or --concurrency : Concurrency for executing metadata refresh. It is not recommended to set it higher than 4 if dremio.iceberg.enabled is not set to True. Default concurrency is 1.
+    -m or --refresh-only : Whether to drop PDS and re-promote it  which maybe needed for enabling Iceberg on Dremio or only refresh metadata.
     -r or --report-filename : File name for the JSON report.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -f or --log-filename : Set Log to write to a specified file instead of STDOUT."

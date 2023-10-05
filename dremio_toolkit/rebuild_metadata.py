@@ -40,6 +40,8 @@ def parse_args():
     arg_parser.add_argument("-p", "--password", help="User password.", required=False)
     arg_parser.add_argument("-s", "--datasource", help="Limits the scope of the metadata refresh to physical datasets in a specified datasource. If not specified, metadata for all physical datasets in all datasources will be refreshed.", required=False)
     arg_parser.add_argument("-c", "--concurrency", help="Concurrency for executing metadata refresh. It is not recommended to set it higher than 4 if dremio.iceberg.enabled is not set to True. Default concurrency is 1.", required=False, default=1)
+    arg_parser.add_argument("-m", "--refresh-only", help="Whether to drop PDS re-promote it which maybe needed for enabling Iceberg on Dremio "
+                                                    "or only refresh metadata.", required=False, default=False, action='store_true')
     arg_parser.add_argument("-r", "--report-filename", help="CSV file name for the JSON exception' report.", required=False)
     arg_parser.add_argument("-l", "--log-level", help="Set Log Level to DEBUG, INFO, WARN, ERROR.",
                             choices=['ERROR', 'WARN', 'INFO', 'DEBUG'], default='WARN')
@@ -55,7 +57,7 @@ def parse_args():
     return parsed_args
 
 
-def rebuild_metadata(ctx: Context, datasource, concurrency):
+def rebuild_metadata(ctx: Context, datasource, concurrency, refresh_only: False):
     logger = ctx.get_logger()
     logger.new_process_status(1, 'Retrieving list of PDS for rebuilding metadata ...')
     env_api = ctx.get_target_env_api()
@@ -76,7 +78,7 @@ def rebuild_metadata(ctx: Context, datasource, concurrency):
         # Wait for a thread to become available to not exceed specified concurrency
         while threading.activeCount() >= base_threads_count + concurrency:
             time.sleep(3)
-        new_thread = RebuildMetadataThread(ctx, pds)
+        new_thread = RebuildMetadataThread(ctx, pds, refresh_only)
         new_thread.start()
         threads.append(new_thread)
 
@@ -136,6 +138,7 @@ if __name__ == '__main__':
     context.init_logger(log_level=args.log_level, log_verbose=args.verbose, log_filepath=args.log_filename)
     context.set_target(env_api=EnvApi(args.dremio_environment_url, args.user, args.password, context))
     context.set_report(report_filepath=args.report_filename)
+    refresh_only = args.refresh_only
 
-    rebuild_metadata(context, args.datasource, int(args.concurrency))
+    rebuild_metadata(context, args.datasource, int(args.concurrency), refresh_only)
 

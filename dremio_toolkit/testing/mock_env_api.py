@@ -116,7 +116,7 @@ class MockEnvApi(EnvApi):
             "tag": "Ee65lPjZOpU="
         }
 
-    def get_catalog_graph(self, catalog_id):
+    def get_catalog_graph(self, catalog_id, catalog_name= None):
         return {
             "parents": [
                 {"path": "/path/to/dataset"},
@@ -160,7 +160,7 @@ class MockEnvApi(EnvApi):
             ]
         }
 
-    def get_catalog(self, catalog_id):
+    def get_catalog(self, catalog_id, catalog_name=''):
         catalogs = {
             "4352b221-abcd-4ba9-a92d-b0dc1c2f36e4": {
                 "children": [],

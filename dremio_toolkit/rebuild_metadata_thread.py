@@ -52,6 +52,9 @@ class RebuildMetadataThread(threading.Thread):
 
         success, jobid, job_info = self._env_api.execute_sql(self._context.get_sql_comment_uuid() +
                                             'ALTER PDS ' + self._pds_path + ' REFRESH METADATA AUTO PROMOTION')
+        if not success:
+            self._logger.error(
+                'Unable to ALTER PDS: ' + str(self._pds_path) + ' jobid: ' + str(jobid) + ' jobInfo: ' + str(job_info))
         self._refresh_job_id = jobid
         self._refresh_job_info = job_info
         self._status = success

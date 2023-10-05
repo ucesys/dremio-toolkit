@@ -23,7 +23,7 @@ from datetime import datetime
 
 from dremio_toolkit.context import Context
 from dremio_toolkit.logger import Logger
-from dremio_toolkit.create_snapshot import create_snapshot
+from dremio_toolkit.take_snapshot import create_snapshot
 from dremio_toolkit.testing.mock_env_api import MockEnvApi
 from dremio_toolkit.testing.utils import load_snapshot
 

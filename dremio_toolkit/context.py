@@ -23,6 +23,7 @@ from dremio_toolkit.env_api import EnvApi
 
 
 class Context:
+    APP_VERSION = "1.0.2"
     FATAL_EXIT_CODE = 1
     NON_FATAL_EXIT_CODE = 2
 

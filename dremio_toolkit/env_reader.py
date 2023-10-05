@@ -96,13 +96,13 @@ class EnvReader:
 			  'SELECT U.USER_NAME AS OWNER_USER_NAME, V.VIEW_NAME, V.PATH, V.SQL_DEFINITION, V.SQL_CONTEXT ' \
 			  'FROM SYS."VIEWS" V ' \
 			  'JOIN SYS."USERS" U ON V.OWNER_ID = U.USER_ID ' \
-			  "WHERE POSITION('@' IN PATH)=2 OR POSITION('@' IN SQL_CONTEXT)=1 "
+			  "WHERE POSITION('@' IN PATH)=2 "
 		jobid = self._env_api.submit_sql(sql)
 		# Wait for the job to complete. Should only take a moment
 		while True:
 			job_info = self._env_api.get_job_info(jobid)
 			if job_info is None or job_info["jobState"] in ['CANCELED', 'FAILED']:
-				self._logger.fatal("Unexpected error. Cannot get a list of INFORMATION_SCHEMA.TABLES.")
+				self._logger.fatal("Unexpected error. Cannot get a list of SYS.VIEWS.")
 			if job_info["jobState"] == 'COMPLETED':
 				break
 			time.sleep(1)
@@ -123,7 +123,7 @@ class EnvReader:
 				job_result = self._env_api.get_job_result(jobid, limit * i, limit)
 				if job_result is not None:
 					for row in job_result['rows']:
-						f.write('Unable to retrieve VDS' + delimiter + 'VDS' + delimiter +
+						f.write('No permission for private user VDS' + delimiter + 'VDS' + delimiter +
 								row['OWNER_USER_NAME'] + delimiter + row['VIEW_NAME'] + delimiter +
 								row['PATH'] + delimiter + 'SQL_CONTEXT:' + row['SQL_CONTEXT'] + '\n')
 			# Report on failed VDS Graph
@@ -233,7 +233,8 @@ class EnvReader:
 		for reflection in reflections:
 			reflection_dataset = self._env_api.get_catalog(reflection['datasetId'])
 			if reflection_dataset is None:
-				self._logger.error("Error processing reflection, cannot get path for dataset_container: " + reflection['datasetId'])
+				self._logger.error("Error processing reflection, cannot get find dataset for Dataset Id referenced in Reflection: " +
+								   reflection['datasetId'])
 				continue
 			reflection["path"] = reflection_dataset['path']
 			if reflection not in self._env_def.reflections:
@@ -324,10 +325,11 @@ class EnvReader:
 			self._logger.error("Ref json does not contain catalog 'id', skipping: ", catalog=ref)
 			return None
 		else:
-			return self._env_api.get_catalog(ref['id'])
+			path = ref['path'] if 'path' in ref else None
+			return self._env_api.get_catalog(ref['id'], catalog_name=path)
 
 	def _read_vds_graph(self, vds):
-		graph = self._env_api.get_catalog_graph(vds['id'])
+		graph = self._env_api.get_catalog_graph(vds['id'], vds['path'])
 		if graph is not None:
 			vds_parent_list = []
 			for parent in graph['parents']:

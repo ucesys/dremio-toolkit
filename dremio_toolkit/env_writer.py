@@ -84,30 +84,50 @@ class EnvWriter:
         if os.path.isfile(report_file):
             os.remove(report_file)
         with open(report_file, "w", encoding="utf-8") as f:
-            f.write("ERROR" + delimiter + "OBJECT_TYPE" + delimiter + "ID" + delimiter + "PATH or NAME" +
-                    delimiter + "NOTES" + "\n")
+            report_json = []
             for vds in self._env_def.vds_list:
-                f.write('Unable to push. Error: ' + self._get_entity_error(vds) + delimiter + 'VDS' + delimiter +
-                        (vds['id'] if 'id' in vds else '') + delimiter + str(vds['path']) + delimiter + '\n')
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(vds),
+                                    "object_type": "VDS",
+                                    "id": vds['id'] if 'id' in vds else '',
+                                    "name": str(vds['path'])})
             for vds in self._vds_hierarchy:
-                f.write('Unable to push. Error: ' + self._get_entity_error(vds[1]) + delimiter + 'VDS' + delimiter +
-                        (vds[1]['id'] if 'id' in vds[1] else '') +
-                        delimiter + str(vds[1]['path']) + delimiter + 'Hierarchy Level: ' + str(vds[0]) + '\n')
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(vds[1]),
+                                    "object_type": "VDS",
+                                    "id": vds[1]['id'] if 'id' in vds[1] else '',
+                                    "name": str(vds[1]['path'])})
             for source in self._failed_sources:
-                f.write('Unable to push. Error: ' + self._get_entity_error(source) + delimiter + 'SOURCE' + delimiter +
-                        (source['id'] if 'id' in source else '') + delimiter + source['name'] + delimiter + '\n')
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(source),
+                                    "object_type": "SOURCE",
+                                    "id": source['id'] if 'id' in source else '',
+                                    "name": source['name']})
             for space in self._failed_spaces:
-                f.write('Unable to push. Error: ' + self._get_entity_error(space) + delimiter + 'SPACE' + delimiter +
-                        (space['id'] if 'id' in space else '') + delimiter + space['name'] + delimiter + '\n')
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(space),
+                                    "object_type": "SPACE",
+                                    "id": space['id'] if 'id' in space else '',
+                                    "name": space['name']})
             for folder in self._failed_folders:
-                f.write('Unable to push. Error: ' + self._get_entity_error(folder) + delimiter + 'FOLDER' + delimiter + (folder['id'] if 'id' in folder else '') +
-                        delimiter + str(folder['path']) + delimiter + '\n')
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(folder),
+                                    "object_type": "FOLDER",
+                                    "id": folder['id'] if 'id' in folder else '',
+                                    "name": str(folder['path'])})
             for wiki in self._failed_wiki:
-                f.write('Unable to push' + delimiter + 'WIKI' + delimiter + (wiki['id'] if 'id' in wiki else '') +
-                        delimiter + str(wiki['path']) + delimiter + '' + '\n')
+                report_json.append({"error": "Unable to push",
+                                    "info": "",
+                                    "object_type": "WIKI",
+                                    "id": wiki['id'] if 'id' in wiki else '',
+                                    "name": str(wiki['path'])})
             for tags in self._failed_tags:
-                f.write('Unable to push' + delimiter + 'TAGS' + delimiter + (tags['id'] if 'id' in tags else '') +
-                        delimiter + str(tags['path']) + delimiter + '' + '\n')
+                report_json.append({"error": "Unable to push",
+                                    "info": "",
+                                    "object_type": "TAGS",
+                                    "id": tags['id'] if 'id' in tags else '',
+                                    "name": str(tags['path'])})
+            json.dump(report_json, f, indent=4, sort_keys=True)
 
     def _retrieve_referenced_acl_principals(self) -> None:
         self._logger.new_process_status(3, 'Retrieving ACL Users. ')

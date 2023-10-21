@@ -63,8 +63,7 @@ PYTHONPATH=./ python dremio_toolkit/push_snapshot.py -d <DREMIO_HOST>:<DREMIO_PO
     -m or --input-mode : FILE, default, will read from a single JSON file, DIR will read from a directory with individual files for each object.
     -i or --input-path : Json file name or a directory name with a snapshot of a Dremio environment.
     -y or --dry-run : Whether it's a dry run or changes should be made to the target.
-    -r or --report-filename : File name for the tab delimited exception' report.
-    -e or --report-delimiter : Delimiter to use in the exception report. Default is tab.
+    -r or --report-filename : File name for the JSON exception' report.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -v or --verbose : Set Log to verbose to print object definitions instead of object IDs.
     -f or --log-filename : Set Log to write to a specified file instead of STDOUT."
@@ -126,7 +125,7 @@ PYTHONPATH=./ python dremio_toolkit/rebuild_metadata.py -d <DREMIO_HOST>:<DREMIO
     -p or --password : User password.
     -s or --datasource : Limits the scope of the metadata refresh to physical datasets (PDS) in a specified Dremio Data Source. If not specified, metadata for all physical datasets in all datasources will be refreshed.
     -c or --concurrency : Concurrency for executing metadata refresh. It is not recommended to set it higher than 4 if dremio.iceberg.enabled is not set to True. Default concurrency is 1.
-    -m or --refresh-only : Whether to drop PDS and re-promote it  which maybe needed for enabling Iceberg on Dremio or only refresh metadata.
+    -m or --refresh-only : Whether to refresh metadata only or to forget metadata first and then re-promote the PDS which can be helpful for enabling Iceberg on Dremio.
     -r or --report-filename : File name for the JSON report.
     -l or --log-level : Set Log Level to DEBUG, INFO, WARN, ERROR.
     -f or --log-filename : Set Log to write to a specified file instead of STDOUT."

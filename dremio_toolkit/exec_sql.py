@@ -84,6 +84,8 @@ def exec_sql(ctx: Context, sql_filename, fail_on_error: bool):
 
 
 if __name__ == '__main__':
+    print("dremio-toolkit version " + str(Context.APP_VERSION))
+
     args = parse_args()
 
     context = Context(Context.CMD_EXEC_SQL)

@@ -70,6 +70,8 @@ def create_snapshot(context, spaces, suppress_dependencies):
 
 
 if __name__ == '__main__':
+    print("dremio-toolkit version " + str(Context.APP_VERSION))
+
     args = parse_args()
 
     context = Context(Context.CMD_CREATE_SNAPSHOT)

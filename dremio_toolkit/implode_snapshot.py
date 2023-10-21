@@ -57,6 +57,8 @@ def implode_snapshot(ctx: Context):
 
 
 if __name__ == '__main__':
+    print("dremio-toolkit version " + str(Context.APP_VERSION))
+
     args = parse_args()
 
     context = Context(Context.CMD_IMPLODE_SNAPSHOT)

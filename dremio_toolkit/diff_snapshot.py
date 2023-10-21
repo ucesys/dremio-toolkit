@@ -62,6 +62,8 @@ def diff_snapshot(ctx: Context):
         exit(Context.NON_FATAL_EXIT_CODE)
 
 if __name__ == '__main__':
+    print("dremio-toolkit version " + str(Context.APP_VERSION))
+
     args = parse_args()
 
     context = Context(Context.CMD_DIFF_SNAPSHOT)

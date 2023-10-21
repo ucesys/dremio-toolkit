@@ -84,6 +84,61 @@ class EnvWriter:
         if os.path.isfile(report_file):
             os.remove(report_file)
         with open(report_file, "w", encoding="utf-8") as f:
+            report_json = []
+            for vds in self._env_def.vds_list:
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(vds),
+                                    "object_type": "VDS",
+                                    "id": vds['id'] if 'id' in vds else '',
+                                    "name": str(vds['path'])})
+            for vds in self._vds_hierarchy:
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(vds[1]),
+                                    "object_type": "VDS",
+                                    "id": vds[1]['id'] if 'id' in vds[1] else '',
+                                    "name": str(vds[1]['path'])})
+            for source in self._failed_sources:
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(source),
+                                    "object_type": "SOURCE",
+                                    "id": source['id'] if 'id' in source else '',
+                                    "name": source['name']})
+            for space in self._failed_spaces:
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(space),
+                                    "object_type": "SPACE",
+                                    "id": space['id'] if 'id' in space else '',
+                                    "name": space['name']})
+            for folder in self._failed_folders:
+                report_json.append({"error": "Unable to push",
+                                    "info": self._get_entity_error(folder),
+                                    "object_type": "FOLDER",
+                                    "id": folder['id'] if 'id' in folder else '',
+                                    "name": str(folder['path'])})
+            for wiki in self._failed_wiki:
+                report_json.append({"error": "Unable to push",
+                                    "info": "",
+                                    "object_type": "WIKI",
+                                    "id": wiki['id'] if 'id' in wiki else '',
+                                    "name": str(wiki['path'])})
+            for tags in self._failed_tags:
+                report_json.append({"error": "Unable to push",
+                                    "info": "",
+                                    "object_type": "TAGS",
+                                    "id": tags['id'] if 'id' in tags else '',
+                                    "name": str(tags['path'])})
+            json.dump(report_json, f, indent=4, sort_keys=True)
+
+
+    def write_exception_report_CSV(self) -> None:
+        report_file = self._context.get_report_filepath()
+        delimiter = self._context.get_report_delimiter()
+        if report_file is None:
+            return
+        # Prep report file
+        if os.path.isfile(report_file):
+            os.remove(report_file)
+        with open(report_file, "w", encoding="utf-8") as f:
             f.write("ERROR" + delimiter + "OBJECT_TYPE" + delimiter + "ID" + delimiter + "PATH or NAME" +
                     delimiter + "NOTES" + "\n")
             for vds in self._env_def.vds_list:

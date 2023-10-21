@@ -129,41 +129,6 @@ class EnvWriter:
                                     "name": str(tags['path'])})
             json.dump(report_json, f, indent=4, sort_keys=True)
 
-
-    def write_exception_report_CSV(self) -> None:
-        report_file = self._context.get_report_filepath()
-        delimiter = self._context.get_report_delimiter()
-        if report_file is None:
-            return
-        # Prep report file
-        if os.path.isfile(report_file):
-            os.remove(report_file)
-        with open(report_file, "w", encoding="utf-8") as f:
-            f.write("ERROR" + delimiter + "OBJECT_TYPE" + delimiter + "ID" + delimiter + "PATH or NAME" +
-                    delimiter + "NOTES" + "\n")
-            for vds in self._env_def.vds_list:
-                f.write('Unable to push. Error: ' + self._get_entity_error(vds) + delimiter + 'VDS' + delimiter +
-                        (vds['id'] if 'id' in vds else '') + delimiter + str(vds['path']) + delimiter + '\n')
-            for vds in self._vds_hierarchy:
-                f.write('Unable to push. Error: ' + self._get_entity_error(vds[1]) + delimiter + 'VDS' + delimiter +
-                        (vds[1]['id'] if 'id' in vds[1] else '') +
-                        delimiter + str(vds[1]['path']) + delimiter + 'Hierarchy Level: ' + str(vds[0]) + '\n')
-            for source in self._failed_sources:
-                f.write('Unable to push. Error: ' + self._get_entity_error(source) + delimiter + 'SOURCE' + delimiter +
-                        (source['id'] if 'id' in source else '') + delimiter + source['name'] + delimiter + '\n')
-            for space in self._failed_spaces:
-                f.write('Unable to push. Error: ' + self._get_entity_error(space) + delimiter + 'SPACE' + delimiter +
-                        (space['id'] if 'id' in space else '') + delimiter + space['name'] + delimiter + '\n')
-            for folder in self._failed_folders:
-                f.write('Unable to push. Error: ' + self._get_entity_error(folder) + delimiter + 'FOLDER' + delimiter + (folder['id'] if 'id' in folder else '') +
-                        delimiter + str(folder['path']) + delimiter + '\n')
-            for wiki in self._failed_wiki:
-                f.write('Unable to push' + delimiter + 'WIKI' + delimiter + (wiki['id'] if 'id' in wiki else '') +
-                        delimiter + str(wiki['path']) + delimiter + '' + '\n')
-            for tags in self._failed_tags:
-                f.write('Unable to push' + delimiter + 'TAGS' + delimiter + (tags['id'] if 'id' in tags else '') +
-                        delimiter + str(tags['path']) + delimiter + '' + '\n')
-
     def _retrieve_referenced_acl_principals(self) -> None:
         self._logger.new_process_status(3, 'Retrieving ACL Users. ')
         for user in self._env_def.referenced_users:

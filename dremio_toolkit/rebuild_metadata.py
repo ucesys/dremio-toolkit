@@ -60,11 +60,6 @@ def rebuild_metadata(ctx: Context, datasource, concurrency, refresh_only: False)
     logger = ctx.get_logger()
     logger.new_process_status(1, 'Retrieving list of PDS for rebuilding metadata ...')
     env_api = ctx.get_target_env_api()
-    # Validate the Dremio environment can scale metadata refresh
-    if concurrency > 4:
-        iceberg_enabled, option_type, option_status = env_api.get_sys_option('dremio.iceberg.enabled', ctx.get_sql_comment_uuid())
-        if not iceberg_enabled:
-            print("Specifying concurrency higher than 4 without setting dremio.iceberg.enabled to True may impact Dremio performance and stability.")
     pds_list = get_pds_list(ctx, datasource)
     if pds_list is None:
         logger.fatal("Unable to retrieve list of PDS. ")
